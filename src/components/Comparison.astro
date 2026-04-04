@@ -1,0 +1,93 @@
+---
+const features = [
+  'Self-hosted',
+  'Open source',
+  'Kubernetes-native',
+  'Secrets management',
+  'Custom K8s config',
+  'Multi-environment',
+  'API-first deploys',
+  'Approval gates',
+  'Free forever',
+];
+
+const platforms = [
+  {
+    name: 'Vesta',
+    highlight: true,
+    checks: [true, true, true, true, true, true, true, true, true],
+  },
+  {
+    name: 'Heroku',
+    checks: [false, false, false, true, false, true, true, false, false],
+  },
+  {
+    name: 'Render',
+    checks: [false, false, false, true, false, true, true, false, false],
+  },
+  {
+    name: 'Coolify',
+    checks: [true, true, false, false, false, true, true, false, true],
+  },
+];
+---
+
+<section class="relative py-24 lg:py-32">
+  <div class="max-w-4xl mx-auto px-6">
+    <div class="text-center mb-16 reveal">
+      <span class="text-[11px] font-mono font-semibold text-accent uppercase tracking-[0.15em] mb-4 block">Comparison</span>
+      <h2 class="font-display italic text-4xl md:text-5xl text-text-primary mb-4">
+        Why Vesta?
+      </h2>
+      <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+        The flexibility of Kubernetes with the simplicity of a PaaS — at no cost.
+      </p>
+    </div>
+
+    <div class="reveal overflow-x-auto" style="transition-delay: 100ms">
+      <div class="card overflow-hidden min-w-[600px]">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-border">
+              <th class="text-left text-[11px] font-mono font-semibold text-text-secondary uppercase tracking-wider px-5 py-4 bg-surface-2/30">Feature</th>
+              {platforms.map(p => (
+                <th class:list={[
+                  'text-center text-[11px] font-mono font-semibold uppercase tracking-wider px-4 py-4 bg-surface-2/30',
+                  p.highlight ? 'text-accent' : 'text-text-secondary',
+                ]}>
+                  {p.name}
+                  {p.highlight && <div class="h-0.5 w-8 mx-auto mt-1.5 bg-accent rounded-full"></div>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {features.map((feature, fi) => (
+              <tr class="border-b border-border/30 last:border-0">
+                <td class="px-5 py-3.5 text-sm text-text-secondary">{feature}</td>
+                {platforms.map((p) => (
+                  <td class="text-center px-4 py-3.5">
+                    {p.checks[fi] ? (
+                      <span class:list={[
+                        'inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px]',
+                        p.highlight
+                          ? 'bg-accent/15 text-accent'
+                          : 'bg-surface-3 text-text-secondary',
+                      ]}>
+                        ✓
+                      </span>
+                    ) : (
+                      <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-surface-3/50 text-text-tertiary text-[11px]">
+                        ✗
+                      </span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

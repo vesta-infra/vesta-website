@@ -1,0 +1,161 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const tiers = [
+  {
+    name: 'Community',
+    price: 'Free',
+    priceSub: 'forever',
+    description: 'Everything you need to run a production PaaS on your own cluster.',
+    highlight: true,
+    features: [
+      'Unlimited apps & projects',
+      'Unlimited environments',
+      'Secrets management',
+      'Autoscaling (HPA)',
+      'Private registry support',
+      'Notifications (Slack, Discord, email, webhooks)',
+      'Health checks & probes',
+      'Ingress with TLS',
+      'CLI, API, and Web UI',
+      'Community support via GitHub',
+    ],
+    cta: 'Get Started',
+    ctaHref: '/docs/getting-started',
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    priceSub: 'contact us',
+    description: 'For organizations that need additional security, compliance, and priority support.',
+    highlight: false,
+    features: [
+      'Everything in Community',
+      'SSO / OIDC integration',
+      'Audit logging & compliance',
+      'Priority support & SLA',
+      'Custom integrations',
+      'Onboarding assistance',
+    ],
+    cta: 'Contact Sales',
+    ctaHref: 'mailto:hello@getvesta.sh',
+  },
+];
+
+const faqs = [
+  {
+    q: 'Is Vesta really free?',
+    a: 'Yes. Vesta is open-source under the GPL-3.0 license. The Community tier includes all core features with no limits on apps, projects, or environments.',
+  },
+  {
+    q: 'What do I need to run Vesta?',
+    a: 'A Kubernetes cluster (v1.27+), Helm 3, and a PostgreSQL database. Optionally, cert-manager for TLS and metrics-server for autoscaling.',
+  },
+  {
+    q: 'Can I use Vesta in production?',
+    a: 'Absolutely. Vesta is designed for production workloads with health checks, autoscaling, secrets management, and multi-environment support.',
+  },
+  {
+    q: 'How is Vesta different from Heroku?',
+    a: 'Vesta is self-hosted on your own Kubernetes cluster — you own your infrastructure. It\'s free, open-source, and gives you full control over your deployment platform.',
+  },
+  {
+    q: 'Do you offer managed hosting?',
+    a: 'Not yet. Vesta is currently self-hosted only. If you\'re interested in a managed offering, reach out to us.',
+  },
+];
+---
+
+<BaseLayout title="Pricing — Vesta" description="Vesta is free and open-source. See our pricing tiers.">
+  <div class="pt-16">
+    <section class="relative py-24 lg:py-32">
+      <div class="max-w-5xl mx-auto px-6">
+        <div class="text-center mb-16">
+          <span class="text-[11px] font-mono font-semibold text-accent uppercase tracking-[0.15em] mb-4 block animate-fade-in">Pricing</span>
+          <h1 class="font-display italic text-5xl md:text-6xl text-text-primary mb-4 animate-slide-up">
+            Open source. Free forever.
+          </h1>
+          <p class="text-text-secondary text-lg max-w-2xl mx-auto animate-slide-up" style="animation-delay: 0.1s">
+            Deploy to your own cluster at no cost. Enterprise support available for teams that need it.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {tiers.map((tier, i) => (
+            <div
+              class:list={[
+                'relative rounded-xl p-8 animate-slide-up',
+                tier.highlight
+                  ? 'bg-surface-2/80 border border-accent/20 shadow-glow gradient-border'
+                  : 'bg-surface-2/40 border border-border',
+              ]}
+              style={`animation-delay: ${i * 0.1}s`}
+            >
+              {tier.highlight && (
+                <div class="absolute -top-3 left-8">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-accent text-surface-0 text-[11px] font-mono font-semibold uppercase tracking-wider">
+                    Recommended
+                  </span>
+                </div>
+              )}
+
+              <h3 class="font-body font-semibold text-text-primary text-xl mb-1">{tier.name}</h3>
+              <div class="flex items-baseline gap-2 mb-3">
+                <span class="font-display italic text-4xl text-text-primary">{tier.price}</span>
+                <span class="text-sm text-text-tertiary">{tier.priceSub}</span>
+              </div>
+              <p class="text-sm text-text-secondary mb-6">{tier.description}</p>
+
+              <a
+                href={tier.ctaHref}
+                class:list={[
+                  'w-full justify-center mb-8',
+                  tier.highlight ? 'btn-primary' : 'btn-ghost',
+                ]}
+              >
+                {tier.cta}
+              </a>
+
+              <ul class="space-y-3">
+                {tier.features.map(feature => (
+                  <li class="flex items-start gap-3 text-sm text-text-secondary">
+                    <span class:list={[
+                      'mt-0.5 shrink-0',
+                      tier.highlight ? 'text-accent' : 'text-text-tertiary',
+                    ]}>✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="py-24 border-t border-border/30">
+      <div class="max-w-3xl mx-auto px-6">
+        <h2 class="font-display italic text-3xl text-text-primary text-center mb-12 reveal">
+          Frequently asked questions
+        </h2>
+
+        <div class="space-y-4">
+          {faqs.map((faq, i) => (
+            <details class="group card p-0 reveal" style={`transition-delay: ${i * 60}ms`}>
+              <summary class="flex items-center justify-between px-6 py-5 cursor-pointer text-text-primary font-medium text-sm select-none list-none">
+                {faq.q}
+                <svg class="w-4 h-4 text-text-tertiary transition-transform group-open:rotate-180 shrink-0 ml-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </summary>
+              <div class="px-6 pb-5 text-sm text-text-secondary leading-relaxed border-t border-border/30 pt-4">
+                {faq.a}
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

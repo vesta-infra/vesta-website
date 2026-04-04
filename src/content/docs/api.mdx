@@ -1,0 +1,75 @@
+---
+title: "API Reference"
+description: "REST API endpoints for the Vesta API server."
+order: 5
+section: "Reference"
+---
+
+# API Reference
+
+Vesta's API server exposes a RESTful API for all platform operations. All endpoints require authentication via Bearer token.
+
+## Authentication
+
+```bash
+curl -H "Authorization: Bearer <token>" https://<api-host>/api/v1/...
+```
+
+## Endpoints
+
+### Apps
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/apps` | List all apps |
+| `POST` | `/api/v1/apps` | Create a new app |
+| `GET` | `/api/v1/apps/:id` | Get app details |
+| `PUT` | `/api/v1/apps/:id` | Update an app |
+| `DELETE` | `/api/v1/apps/:id` | Delete an app |
+
+### Deployments
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v1/apps/:id/deploy` | Deploy an app |
+| `GET` | `/api/v1/apps/:id/deployments` | List deployments |
+
+**Deploy request body:**
+
+```json
+{
+  "tag": "v1.2.3",
+  "environment": "production"
+}
+```
+
+### Projects
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/projects` | List all projects |
+| `POST` | `/api/v1/projects` | Create a new project |
+| `GET` | `/api/v1/projects/:id` | Get project details |
+| `DELETE` | `/api/v1/projects/:id` | Delete a project |
+
+### Secrets
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/secrets` | List all secrets |
+| `POST` | `/api/v1/secrets` | Create a new secret |
+| `DELETE` | `/api/v1/secrets/:id` | Delete a secret |
+
+### Auth
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v1/auth/login` | Login and receive JWT |
+| `POST` | `/api/v1/auth/register` | Register a new user |
+| `POST` | `/api/v1/auth/forgot-password` | Request password reset |
+
+### Health
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/healthz` | Health check endpoint |

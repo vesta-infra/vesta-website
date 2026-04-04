@@ -1,0 +1,80 @@
+---
+title: "CLI Reference"
+description: "Complete reference for the Vesta command-line tool."
+order: 4
+section: "Reference"
+---
+
+# CLI Reference
+
+The Vesta CLI is a Go binary built with Cobra. Install it and manage your entire platform from the terminal.
+
+## Installation
+
+```bash
+cd cli && go build -o vesta . && mv vesta /usr/local/bin/
+```
+
+## Commands
+
+### Deploy
+
+Deploy an application to a specific environment:
+
+```bash
+vesta deploy <app-name> --tag <image-tag> --env <environment>
+```
+
+**Examples:**
+
+```bash
+vesta deploy my-app --tag v1.2.3 --env production
+vesta deploy api-server --tag latest --env staging
+```
+
+### Apps
+
+List and manage applications:
+
+```bash
+vesta apps list
+vesta apps get <app-name>
+vesta apps delete <app-name>
+```
+
+### Secrets
+
+Manage secrets:
+
+```bash
+vesta secrets create <name> --type opaque
+vesta secrets list
+vesta secrets delete <name>
+```
+
+### Builds
+
+Monitor build progress:
+
+```bash
+vesta builds list --app <app-name>
+vesta builds logs <build-id>
+```
+
+### Pipelines
+
+Manage deployment pipelines with multi-stage workflows:
+
+```bash
+vesta pipelines list
+vesta pipelines get <pipeline-name>
+```
+
+## Global Flags
+
+| Flag | Description |
+|------|-------------|
+| `--api-url` | Vesta API server URL |
+| `--token` | Authentication token |
+| `--output` | Output format (`table`, `json`, `yaml`) |
+| `--help` | Show help for any command |

@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<BaseLayout title="Blog — Vesta" description="News, updates, and guides from the Vesta team.">
+  <div class="pt-16">
+    <section class="py-24 lg:py-32">
+      <div class="max-w-4xl mx-auto px-6">
+        <div class="text-center mb-16">
+          <span class="text-[11px] font-mono font-semibold text-accent uppercase tracking-[0.15em] mb-4 block animate-fade-in">Blog</span>
+          <h1 class="font-display italic text-5xl text-text-primary animate-slide-up">
+            News & Updates
+          </h1>
+        </div>
+
+        {posts.length === 0 ? (
+          <p class="text-center text-text-secondary">No posts yet. Check back soon.</p>
+        ) : (
+          <div class="grid gap-6">
+            {posts.map((post, i) => (
+              <a
+                href={`/blog/${post.slug}`}
+                class="card-hover p-6 md:p-8 block group reveal"
+                style={`transition-delay: ${i * 80}ms`}
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <time class="text-[11px] font-mono text-text-tertiary uppercase tracking-wider">
+                    {post.data.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </time>
+                  <span class="text-text-tertiary">·</span>
+                  <span class="text-[11px] font-mono text-text-tertiary">{post.data.author}</span>
+                </div>
+                <h2 class="font-display italic text-2xl text-text-primary group-hover:text-accent transition-colors mb-2">
+                  {post.data.title}
+                </h2>
+                <p class="text-sm text-text-secondary leading-relaxed">
+                  {post.data.description}
+                </p>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  </div>
+</BaseLayout>

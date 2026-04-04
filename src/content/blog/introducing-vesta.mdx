@@ -1,0 +1,56 @@
+---
+title: "Introducing Vesta"
+description: "Vesta is a self-hosted, open-source Platform-as-a-Service for Kubernetes. Deploy applications without writing manifests."
+date: 2026-04-01
+author: "Vesta Team"
+---
+
+We're excited to introduce **Vesta** — a self-hosted, open-source Platform-as-a-Service that turns your Kubernetes cluster into a deployment platform.
+
+## The Problem
+
+Kubernetes is powerful, but deploying a simple application requires writing Deployments, Services, Ingress rules, HPA configs, and more. For teams that want to ship fast, this manifest overhead creates friction.
+
+Existing solutions either lock you into a cloud provider (Heroku, Render) or lack critical features like secrets management and multi-environment support (Coolify).
+
+## What Vesta Does
+
+Vesta sits on top of your Kubernetes cluster and provides:
+
+- **Zero-manifest deploys** — Push an image, run a CLI command, or call an API. Vesta generates all the Kubernetes resources.
+- **Projects & environments** — Organize apps into projects with staging, production, and custom environments.
+- **Secrets management** — Opaque, Docker registry, and TLS secrets with per-app bindings.
+- **Autoscaling** — CPU, memory, and custom metric-based HPA out of the box.
+- **Notifications** — Get alerted on Slack, Discord, email, or webhooks when deploys succeed or fail.
+
+## How It Works
+
+Install Vesta with a single Helm command:
+
+```bash
+helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \
+  -n vesta-system --create-namespace
+```
+
+Then deploy your first app:
+
+```bash
+vesta deploy my-app --tag v1.2.3 --env production
+```
+
+That's it. No Deployments, no Services, no Ingress YAML. Vesta handles everything.
+
+## Architecture
+
+Vesta consists of four components:
+
+- **Operator** (Go/Kubebuilder) — Watches CRDs and reconciles Kubernetes resources
+- **API Server** (Go/Gin) — REST API for all platform operations
+- **Web UI** (React/TypeScript) — Dashboard for visual management
+- **CLI** (Go/Cobra) — Command-line tool for automation
+
+## Get Started
+
+Vesta is available now on [GitHub](https://github.com/vesta-infra/vesta-kubernetes). Read the [Quick Start guide](/docs/getting-started) to get up and running in under 5 minutes.
+
+We'd love your feedback — open an issue, submit a PR, or just give us a star.

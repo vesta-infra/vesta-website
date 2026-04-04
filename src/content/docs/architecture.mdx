@@ -1,0 +1,65 @@
+---
+title: "Architecture"
+description: "How Vesta's components work together to provide a complete PaaS."
+order: 3
+section: "Concepts"
+---
+
+# Architecture
+
+Vesta consists of four independently deployable components that work together to provide a complete Platform-as-a-Service on Kubernetes.
+
+## Components
+
+### Operator (Go / Kubebuilder)
+
+The operator watches Vesta's Custom Resource Definitions (CRDs) and reconciles the corresponding Kubernetes resources:
+
+- **VestaApp** → Deployment, Service, Ingress, HPA
+- **VestaProject** → Namespace, ResourceQuota
+- **VestaEnvironment** → Namespace, environment-scoped config
+- **VestaSecret** → Kubernetes Secret with bindings
+- **VestaConfig** → Platform-wide configuration
+
+### API Server (Go / Gin)
+
+The REST API server handles all user-facing operations:
+
+- Projects, apps, and deployments CRUD
+- Secrets management
+- Authentication (local accounts, JWT)
+- Notifications (Slack, Discord, webhooks, email)
+- Audit logging
+
+### Web UI (React / TypeScript / Tailwind)
+
+A dashboard for managing the platform through a browser. Provides visual management of projects, apps, secrets, and deployments.
+
+### CLI (Go / Cobra)
+
+A command-line tool for all operations:
+
+```bash
+vesta deploy my-app --tag v1.2.3 --env production
+vesta apps list
+vesta secrets create my-secret --type opaque
+```
+
+## Request Flow
+
+1. User issues a deploy command (CLI, API, or git push)
+2. API server validates the request and creates/updates a **VestaApp** CRD
+3. Operator detects the CRD change and reconciles Kubernetes resources
+4. Deployment rolls out, Service exposes the app, Ingress routes traffic
+5. Notifications fire on success/failure
+
+## Directory Structure
+
+```
+vesta-kubernetes/
+├── operator/          # Kubernetes operator (Go/Kubebuilder)
+├── api/               # REST API server (Go/Gin)
+├── ui/                # Web dashboard (React/TypeScript/Tailwind)
+├── cli/               # CLI tool (Go/Cobra)
+└── deploy/helm/vesta/ # Helm chart
+```

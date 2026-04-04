@@ -1,0 +1,73 @@
+---
+title: "Quick Start"
+description: "Get Vesta running on your Kubernetes cluster in under 5 minutes."
+order: 1
+section: "Getting Started"
+---
+
+# Quick Start
+
+Get Vesta running on your Kubernetes cluster in under 5 minutes.
+
+## Prerequisites
+
+- Kubernetes cluster (v1.27+)
+- Helm 3
+- PostgreSQL database (for the API server)
+- (Optional) cert-manager for TLS
+- (Optional) metrics-server for autoscaling
+
+## 1. Install CRDs
+
+Apply the Custom Resource Definitions that Vesta uses to manage your applications:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaapps.yaml
+kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaprojects.yaml
+kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaconfigs.yaml
+kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaenvironments.yaml
+kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestasecrets.yaml
+```
+
+## 2. Create the database secret
+
+Vesta's API server requires a PostgreSQL database. Create a secret with your connection string:
+
+```bash
+kubectl create namespace vesta-system
+
+kubectl create secret generic vesta-db-secret \
+  -n vesta-system \
+  --from-literal=DATABASE_URL="postgres://user:password@db-host:5432/vesta?sslmode=disable"
+```
+
+## 3. Install with Helm
+
+```bash
+helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \
+  -n vesta-system --create-namespace \
+  --set api.database.existingSecret=vesta-db-secret \
+  --set config.ingressClassName=traefik
+```
+
+## 4. Deploy your first app
+
+Once Vesta is running, deploy an application with the CLI:
+
+```bash
+vesta deploy my-app --tag v1.2.3 --env production
+```
+
+Or via the API:
+
+```bash
+curl -X POST https://<api-host>/api/v1/apps/my-app/deploy \
+  -H "Authorization: Bearer <token>" \
+  -d '{"tag": "v1.2.3", "environment": "production"}'
+```
+
+## Next steps
+
+- [Configuration](/docs/configuration) — Customize Vesta with Helm values
+- [Architecture](/docs/architecture) — Understand how the components work together
+- [CLI Reference](/docs/cli) — Full list of CLI commands
