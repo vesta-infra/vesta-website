@@ -1,0 +1,84 @@
+---
+import Logo from './Logo.astro';
+
+const footerLinks = {
+  Product: [
+    { label: 'Features', href: '/#features' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'Architecture', href: '/docs/architecture' },
+  ],
+  Resources: [
+    { label: 'Documentation', href: '/docs/getting-started' },
+    { label: 'Configuration', href: '/docs/configuration' },
+    { label: 'API Reference', href: '/docs/api' },
+    { label: 'CLI Reference', href: '/docs/cli' },
+  ],
+  Community: [
+    { label: 'GitHub', href: 'https://github.com/vesta-infra/vesta-kubernetes', external: true },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Contributing', href: 'https://github.com/vesta-infra/vesta-kubernetes/blob/main/CONTRIBUTING.md', external: true },
+  ],
+};
+---
+
+<footer class="border-t border-border/50 bg-surface-1/30">
+  <div class="max-w-6xl mx-auto px-6 py-16">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
+      <!-- Logo + tagline -->
+      <div class="col-span-2 md:col-span-1">
+        <Logo class="mb-4" />
+        <p class="text-sm text-text-tertiary leading-relaxed mb-5">
+          Self-hosted PaaS for Kubernetes.<br />
+          Deploy without manifests.
+        </p>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-3/50 border border-border/50">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+          <span class="text-[11px] font-mono text-text-secondary">GPL-3.0 Open Source</span>
+        </div>
+      </div>
+
+      <!-- Link columns -->
+      {Object.entries(footerLinks).map(([section, links]) => (
+        <div>
+          <h4 class="text-[11px] font-mono font-semibold text-text-secondary uppercase tracking-[0.1em] mb-4">{section}</h4>
+          <ul class="space-y-2.5">
+            {links.map(link => (
+              <li>
+                <a
+                  href={link.href}
+                  target={link.external ? '_blank' : undefined}
+                  rel={link.external ? 'noopener noreferrer' : undefined}
+                  class="text-sm text-text-tertiary hover:text-text-primary transition-colors inline-flex items-center gap-1"
+                >
+                  {link.label}
+                  {link.external && (
+                    <svg class="w-3 h-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                    </svg>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-16 pt-6 border-t border-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-[12px] text-text-tertiary font-mono">
+        &copy; {new Date().getFullYear()} Vesta. All rights reserved.
+      </p>
+      <a
+        href="https://github.com/vesta-infra/vesta-kubernetes"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-text-tertiary hover:text-text-primary transition-colors"
+        aria-label="GitHub"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</footer>

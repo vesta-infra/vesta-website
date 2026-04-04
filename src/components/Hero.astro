@@ -1,0 +1,61 @@
+---
+import TerminalDemo from './TerminalDemo.astro';
+---
+
+<section class="relative min-h-screen flex items-center overflow-hidden" id="hero">
+  <!-- Atmospheric background -->
+  <div class="absolute inset-0">
+    <!-- Radial amber glow -->
+    <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-accent/8 via-accent/2 to-transparent rounded-full blur-3xl"></div>
+    <!-- Secondary glow -->
+    <div class="absolute bottom-0 left-1/4 w-[600px] h-[400px] bg-gradient-radial from-accent/4 to-transparent rounded-full blur-3xl"></div>
+    <!-- Dot grid -->
+    <div class="absolute inset-0 dot-grid opacity-30"></div>
+    <!-- Floating blobs -->
+    <div class="absolute top-20 right-[15%] w-64 h-64 bg-accent/[0.03] rounded-full blur-2xl animate-float"></div>
+    <div class="absolute bottom-32 left-[10%] w-48 h-48 bg-accent/[0.04] rounded-full blur-2xl animate-float" style="animation-delay: -3s;"></div>
+  </div>
+
+  <div class="relative max-w-6xl mx-auto px-6 pt-32 pb-20 w-full">
+    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <!-- Left: Copy -->
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface-2/50 backdrop-blur-sm mb-8 animate-fade-in">
+          <span class="w-1.5 h-1.5 rounded-full bg-accent animate-glow-pulse"></span>
+          <span class="text-[12px] font-mono text-text-secondary">Open Source &middot; Self-hosted &middot; Kubernetes-native</span>
+        </div>
+
+        <h1 class="font-display italic text-[clamp(2.5rem,5vw,4rem)] leading-[1.1] text-text-primary mb-6 animate-slide-up">
+          Deploy to Kubernetes<br />
+          <span class="text-gradient">without writing a</span><br />
+          <span class="text-gradient">single manifest.</span>
+        </h1>
+
+        <p class="text-lg text-text-secondary leading-relaxed max-w-lg mb-10 animate-slide-up" style="animation-delay: 0.1s;">
+          Vesta is a self-hosted PaaS that turns your Kubernetes cluster into a deployment platform.
+          Git push, CLI, or API — deploy your way.
+        </p>
+
+        <div class="flex flex-wrap gap-4 animate-slide-up" style="animation-delay: 0.2s;">
+          <a href="/docs/getting-started" class="btn-primary">
+            Get Started
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </a>
+          <a href="https://github.com/vesta-infra/vesta-kubernetes" target="_blank" rel="noopener noreferrer" class="btn-ghost">
+            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            View on GitHub
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Terminal -->
+      <div class="animate-slide-up" style="animation-delay: 0.3s;">
+        <TerminalDemo />
+      </div>
+    </div>
+  </div>
+</section>

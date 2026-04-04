@@ -1,0 +1,82 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+
+const docsNav = [
+  {
+    section: 'Getting Started',
+    items: [
+      { label: 'Quick Start', slug: 'getting-started' },
+      { label: 'Configuration', slug: 'configuration' },
+    ],
+  },
+  {
+    section: 'Concepts',
+    items: [
+      { label: 'Architecture', slug: 'architecture' },
+    ],
+  },
+  {
+    section: 'Reference',
+    items: [
+      { label: 'CLI', slug: 'cli' },
+      { label: 'API', slug: 'api' },
+    ],
+  },
+];
+
+const currentPath = Astro.url.pathname.replace(/\/$/, '');
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="pt-16">
+    <div class="max-w-6xl mx-auto px-6 py-12 lg:py-16">
+      <div class="flex gap-10 lg:gap-16">
+        <!-- Sidebar -->
+        <aside class="hidden lg:block w-56 shrink-0">
+          <nav class="sticky top-28 space-y-8">
+            {docsNav.map(group => (
+              <div>
+                <h4 class="text-[11px] font-mono font-semibold text-text-secondary uppercase tracking-[0.1em] mb-3">
+                  {group.section}
+                </h4>
+                <ul class="space-y-0.5">
+                  {group.items.map(item => {
+                    const href = `/docs/${item.slug}`;
+                    const isActive = currentPath === href;
+                    return (
+                      <li>
+                        <a
+                          href={href}
+                          class:list={[
+                            'block px-3 py-2 text-sm rounded-lg transition-all duration-200',
+                            isActive
+                              ? 'text-accent bg-accent/8 border-l-2 border-accent'
+                              : 'text-text-secondary hover:text-text-primary hover:bg-surface-3/50',
+                          ]}
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </aside>
+
+        <!-- Content -->
+        <article class="flex-1 min-w-0 prose max-w-none">
+          <slot />
+        </article>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,146 @@
+---
+import Logo from './Logo.astro';
+
+const navLinks = [
+  { label: 'Features', href: '/#features' },
+  { label: 'Docs', href: '/docs/getting-started' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Blog', href: '/blog' },
+];
+
+const repoUrl = 'https://github.com/vesta-infra/vesta-kubernetes';
+---
+
+<header class="fixed top-0 left-0 right-0 z-50 border-b border-border/50" id="site-header">
+  <div class="absolute inset-0 bg-surface-0/80 backdrop-blur-xl"></div>
+  <nav class="relative max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <Logo />
+
+    <!-- Desktop nav -->
+    <div class="hidden md:flex items-center gap-1">
+      {navLinks.map(link => (
+        <a
+          href={link.href}
+          class="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-surface-3/50"
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+
+    <div class="hidden md:flex items-center gap-3">
+      <!-- GitHub stars -->
+      <a
+        href={repoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="flex items-center gap-2 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary border border-border rounded-lg hover:border-border-hover hover:bg-surface-3/50 transition-all"
+        id="github-star-btn"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+        <span class="font-mono text-xs" id="star-count">Star</span>
+      </a>
+
+      <a href="/docs/getting-started" class="btn-primary text-sm !py-2">
+        Get Started
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button
+      class="md:hidden relative w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary"
+      id="mobile-menu-btn"
+      aria-label="Toggle menu"
+    >
+      <svg class="w-5 h-5" id="menu-icon-open" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+      </svg>
+      <svg class="w-5 h-5 hidden" id="menu-icon-close" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div class="hidden md:hidden border-t border-border/50 bg-surface-0/95 backdrop-blur-xl" id="mobile-menu">
+    <div class="px-6 py-4 space-y-1">
+      {navLinks.map(link => (
+        <a
+          href={link.href}
+          class="block px-4 py-3 text-sm text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-3/50 transition-colors"
+        >
+          {link.label}
+        </a>
+      ))}
+      <div class="pt-3 border-t border-border/50 mt-3 flex flex-col gap-2">
+        <a
+          href={repoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center gap-2 px-4 py-3 text-sm text-text-secondary hover:text-text-primary"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+          </svg>
+          GitHub
+        </a>
+        <a href="/docs/getting-started" class="btn-primary text-sm justify-center">
+          Get Started
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Mobile menu toggle
+  const btn = document.getElementById('mobile-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  const iconOpen = document.getElementById('menu-icon-open');
+  const iconClose = document.getElementById('menu-icon-close');
+
+  btn?.addEventListener('click', () => {
+    const isOpen = !menu?.classList.contains('hidden');
+    menu?.classList.toggle('hidden');
+    iconOpen?.classList.toggle('hidden');
+    iconClose?.classList.toggle('hidden');
+  });
+
+  // Fetch GitHub star count
+  async function fetchStars() {
+    try {
+      const res = await fetch('https://api.github.com/repos/vesta-infra/vesta-kubernetes');
+      if (!res.ok) return;
+      const data = await res.json();
+      const count = data.stargazers_count;
+      if (typeof count === 'number') {
+        const el = document.getElementById('star-count');
+        if (el) {
+          el.textContent = count >= 1000
+            ? `${(count / 1000).toFixed(1)}k`
+            : count.toString();
+        }
+      }
+    } catch {
+      // silently fail — badge stays as "Star"
+    }
+  }
+  fetchStars();
+
+  // Header background on scroll
+  const header = document.getElementById('site-header');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 10) {
+      header?.classList.add('border-border');
+      header?.classList.remove('border-border/50');
+    } else {
+      header?.classList.remove('border-border');
+      header?.classList.add('border-border/50');
+    }
+  });
+</script>

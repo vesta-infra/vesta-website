@@ -1,0 +1,78 @@
+---
+const lines = [
+  { prompt: '$ ', text: 'helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \\', delay: 0 },
+  { prompt: '  ', text: '  -n vesta-system --create-namespace', delay: 400 },
+  { prompt: '', text: '', delay: 800 },
+  { prompt: '', text: '✓ Operator deployed', delay: 1200, color: 'green' },
+  { prompt: '', text: '✓ API server running', delay: 1500, color: 'green' },
+  { prompt: '', text: '✓ UI dashboard ready', delay: 1800, color: 'green' },
+  { prompt: '', text: '', delay: 2200 },
+  { prompt: '$ ', text: 'vesta deploy my-app --tag v1.2.3 --env production', delay: 2600 },
+  { prompt: '', text: '', delay: 3000 },
+  { prompt: '', text: '→ Building from image: my-app:v1.2.3', delay: 3200, color: 'secondary' },
+  { prompt: '', text: '→ Deploying to production...', delay: 3600, color: 'secondary' },
+  { prompt: '', text: '✓ Deployment successful', delay: 4200, color: 'green' },
+  { prompt: '', text: '  https://my-app.apps.getvesta.sh', delay: 4400, color: 'accent' },
+];
+---
+
+<div class="relative rounded-xl overflow-hidden border border-border bg-surface-1/90 shadow-card backdrop-blur-sm">
+  <!-- Terminal chrome -->
+  <div class="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-surface-2/50">
+    <div class="flex gap-1.5">
+      <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></div>
+      <div class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></div>
+      <div class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></div>
+    </div>
+    <span class="text-[11px] font-mono text-text-tertiary ml-2">terminal — zsh</span>
+  </div>
+
+  <!-- Terminal body -->
+  <div class="p-5 font-mono text-[13px] leading-relaxed min-h-[280px]" id="terminal-body">
+    {lines.map((line, i) => (
+      <div
+        class="terminal-line opacity-0"
+        data-delay={line.delay}
+        style={`transition-delay: ${line.delay}ms`}
+      >
+        {line.prompt && (
+          <span class="text-accent">{line.prompt}</span>
+        )}
+        <span class:list={[
+          line.color === 'green' && 'text-green-400',
+          line.color === 'accent' && 'text-accent-glow underline underline-offset-4 decoration-accent/30',
+          line.color === 'secondary' && 'text-text-secondary',
+          !line.color && 'text-text-primary',
+        ]}>{line.text}</span>
+      </div>
+    ))}
+    <div class="terminal-line opacity-0" data-delay="4800">
+      <span class="text-accent">$ </span>
+      <span class="inline-block w-2 h-4 bg-accent/70 animate-blink align-text-bottom"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const terminalObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const lines = entry.target.querySelectorAll('.terminal-line');
+          lines.forEach((line) => {
+            const delay = parseInt((line as HTMLElement).dataset.delay || '0');
+            setTimeout(() => {
+              line.classList.remove('opacity-0');
+              line.classList.add('animate-fade-in');
+            }, delay);
+          });
+          terminalObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.3 }
+  );
+
+  const terminalBody = document.getElementById('terminal-body');
+  if (terminalBody) terminalObserver.observe(terminalBody);
+</script>

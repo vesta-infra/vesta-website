@@ -1,0 +1,22 @@
+---
+const stats = [
+  { value: 'Zero', label: 'YAML needed', icon: '✦' },
+  { value: '< 60s', label: 'to deploy', icon: '⚡' },
+  { value: '100%', label: 'open source', icon: '◈' },
+  { value: 'Any', label: 'K8s cluster', icon: '⎈' },
+];
+---
+
+<section class="relative border-y border-border/30 bg-surface-1/30">
+  <div class="max-w-6xl mx-auto px-6 py-12">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+      {stats.map((stat, i) => (
+        <div class="reveal text-center" style={`transition-delay: ${i * 100}ms`}>
+          <div class="text-accent/60 text-lg mb-2">{stat.icon}</div>
+          <div class="font-mono font-semibold text-2xl text-text-primary mb-1">{stat.value}</div>
+          <div class="font-mono text-[11px] text-text-tertiary uppercase tracking-[0.12em]">{stat.label}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
