@@ -7,69 +7,173 @@ section: "Reference"
 
 # API Reference
 
-Vesta's API server exposes a RESTful API for all platform operations. All endpoints require authentication via Bearer token.
+Vesta's API server exposes a RESTful API for every platform operation — the CLI and web UI
+are both built on it. All paths below are relative to `/api/v1` unless noted.
 
 ## Authentication
 
+Most endpoints require a bearer token. Create one under **API tokens**, then:
+
 ```bash
-curl -H "Authorization: Bearer <token>" https://<api-host>/api/v1/...
+curl -H "Authorization: Bearer <token>" https://<api-host>/api/v1/apps
 ```
 
-## Endpoints
+Tokens carry scopes (`read`, `write`, `deploy`) and users carry roles (`admin`, `developer`,
+`viewer`). Write endpoints reject the `viewer` role.
 
-### Apps
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/v1/apps` | List all apps |
-| `POST` | `/api/v1/apps` | Create a new app |
-| `GET` | `/api/v1/apps/:id` | Get app details |
-| `PUT` | `/api/v1/apps/:id` | Update an app |
-| `DELETE` | `/api/v1/apps/:id` | Delete an app |
-
-### Deployments
+### Unauthenticated endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/v1/apps/:id/deploy` | Deploy an app |
-| `GET` | `/api/v1/apps/:id/deployments` | List deployments |
+| `GET` | `/healthz` | Health check (outside `/api/v1`) |
+| `GET` | `/setup/status` | Whether first-run setup is complete |
+| `POST` | `/setup` | Create the first admin account |
+| `POST` | `/auth/login` | Login and receive a JWT |
+| `GET` | `/auth/oauth/:provider` | Start an OAuth login |
+| `GET` | `/auth/forgot-password/status` | Whether password reset is configured |
+| `POST` | `/auth/forgot-password` | Request a password reset |
+| `POST` | `/auth/reset-password` | Complete a password reset |
+| `POST` | `/auth/accept-invite` | Accept a team invitation |
+| `POST` | `/webhooks/:provider` | Inbound webhook (verified by signature) |
 
-**Deploy request body:**
+## Projects & environments
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/projects` | List projects |
+| `POST` | `/projects` | Create a project |
+| `GET` | `/projects/:projectId` | Get a project |
+| `PUT` | `/projects/:projectId` | Update a project |
+| `DELETE` | `/projects/:projectId` | Delete a project |
+| `GET` | `/projects/:projectId/environments` | List environments |
+| `POST` | `/projects/:projectId/environments` | Create an environment |
+| `PUT` | `/projects/:projectId/environments/:env` | Update an environment |
+| `DELETE` | `/projects/:projectId/environments/:env` | Delete an environment |
+| `POST` | `/projects/:projectId/environments/:env/clone` | Clone an environment |
+| `GET` | `/projects/:projectId/members` | List project members |
+| `GET` | `/projects/:projectId/dependencies` | App dependency graph |
+
+## Apps
+
+Apps live inside a project, so they are **created under the project** and addressed by app ID
+afterwards.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/apps` | List all apps |
+| `POST` | `/projects/:projectId/apps` | Create an app |
+| `GET` | `/projects/:projectId/apps` | List apps in a project |
+| `GET` | `/apps/:appId` | Get app details |
+| `PUT` | `/apps/:appId` | Update an app |
+| `DELETE` | `/apps/:appId` | Delete an app |
+| `POST` | `/apps/:appId/clone` | Clone an app |
+| `GET` | `/pod-sizes` | Available pod size presets |
+
+## Deployments
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/apps/:appId/deploy` | Deploy an app |
+| `POST` | `/apps/:appId/rollback` | Roll back to a previous version |
+| `GET` | `/apps/:appId/deployments` | List deployments |
+| `POST` | `/apps/:appId/restart` | Restart pods |
+| `POST` | `/apps/:appId/scale` | Scale replicas |
+| `POST` | `/apps/:appId/stop` · `/start` | Stop or start an app |
+| `POST` | `/apps/:appId/sleep` · `/wake` | Sleep or wake an app |
+| `GET` | `/projects/:projectId/scheduled-deployments` | List scheduled deployments |
+| `POST` | `/projects/:projectId/scheduled-deployments` | Schedule a deployment |
+
+**Deploy request body** — `environment` is required:
 
 ```json
 {
+  "environment": "production",
   "tag": "v1.2.3",
-  "environment": "production"
+  "reason": "hotfix for #412",
+  "commitSHA": "7f3c9a1"
 }
 ```
 
-### Projects
+To deploy from git instead of a pre-built tag, send `type: "git"` with a `git` reference:
+
+```json
+{
+  "environment": "production",
+  "type": "git",
+  "git": { "branch": "main" }
+}
+```
+
+## Builds
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/projects` | List all projects |
-| `POST` | `/api/v1/projects` | Create a new project |
-| `GET` | `/api/v1/projects/:id` | Get project details |
-| `DELETE` | `/api/v1/projects/:id` | Delete a project |
+| `POST` | `/apps/:appId/builds` | Trigger a build |
+| `GET` | `/apps/:appId/builds` | List builds |
+| `GET` | `/apps/:appId/builds/:buildId` | Get a build |
+| `GET` | `/apps/:appId/builds/:buildId/logs` | Build logs |
+| `POST` | `/apps/:appId/builds/:buildId/cancel` | Cancel a build |
+| `GET` | `/git/repos` · `/git/branches` | Repos and branches available to the GitHub App |
 
-### Secrets
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/v1/secrets` | List all secrets |
-| `POST` | `/api/v1/secrets` | Create a new secret |
-| `DELETE` | `/api/v1/secrets/:id` | Delete a secret |
-
-### Auth
+## Config, secrets & env vars
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/v1/auth/login` | Login and receive JWT |
-| `POST` | `/api/v1/auth/register` | Register a new user |
-| `POST` | `/api/v1/auth/forgot-password` | Request password reset |
+| `GET` | `/apps/:appId/envs/:env/envvars` | List non-secret env vars |
+| `POST` | `/apps/:appId/envs/:env/envvars` | Set env vars |
+| `DELETE` | `/apps/:appId/envs/:env/envvars/:key` | Delete an env var |
+| `GET` | `/apps/:appId/envs/:env/secrets` | List secret keys (values hidden) |
+| `POST` | `/apps/:appId/envs/:env/secrets` | Set a secret |
+| `GET` | `/apps/:appId/envs/:env/secrets/reveal` | Reveal secret values |
+| `GET` | `/secrets` | List all secrets (metadata) |
+| `PUT` · `DELETE` | `/secrets/:secretId` | Update or delete a secret |
+| `GET` · `POST` | `/secrets/registry` | Manage registry (image pull) secrets |
+| `GET` · `POST` | `/projects/:projectId/shared-secrets` | Project-scoped shared secrets |
+| `POST` · `DELETE` | `/apps/:appId/shared-secrets` | Bind or unbind a shared secret |
 
-### Health
+## Observability & operations
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/healthz` | Health check endpoint |
+| `GET` | `/apps/:appId/logs` | Stream logs (SSE) |
+| `GET` | `/apps/:appId/logs/ws` | Stream logs (WebSocket) |
+| `GET` | `/apps/:appId/exec` | Interactive shell into a pod (WebSocket) |
+| `GET` | `/apps/:appId/metrics` | CPU/memory metrics |
+| `GET` | `/apps/:appId/metrics/prometheus` | Prometheus metrics for the app |
+| `GET` | `/apps/:appId/diagnostics` | Why an app is unhealthy |
+| `GET` | `/apps/:appId/files` · `/files/read` | Browse and read files in a pod |
+| `POST` | `/apps/:appId/files/write` | Write a file in a pod |
+| `GET` | `/apps/:appId/cronjobs/status` | CronJob statuses |
+| `POST` | `/apps/:appId/cronjobs/:name/trigger` | Trigger a CronJob now |
+| `GET` · `PUT` | `/apps/:appId/rate-limits` | Ingress rate limits |
+| `GET` | `/health/dashboard` | Cluster-wide health dashboard |
+
+## Notifications & alerts
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` · `POST` | `/projects/:projectId/notifications` | Manage notification channels |
+| `PUT` · `DELETE` | `/projects/:projectId/notifications/:channelId` | Update or delete a channel |
+| `POST` | `/projects/:projectId/notifications/:channelId/test` | Send a test notification |
+| `GET` | `/projects/:projectId/notifications/history` | Delivery history |
+| `GET` · `POST` | `/projects/:projectId/alerts` | Manage alert rules |
+| `PUT` · `DELETE` | `/projects/:projectId/alerts/:ruleId` | Update or delete an alert rule |
+
+## Users, teams & audit
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/users/me` | Current user |
+| `PUT` | `/users/me` · `/users/me/password` | Update profile or password |
+| `GET` | `/users` | List users (admin) |
+| `POST` | `/auth/register` | Create a user (admin) |
+| `GET` · `POST` | `/teams` | List or create teams |
+| `GET` · `PUT` · `DELETE` | `/teams/:teamId` | Manage a team |
+| `POST` · `DELETE` | `/teams/:teamId/members` | Add or remove team members |
+| `GET` · `POST` | `/auth/tokens` | List or create API tokens |
+| `DELETE` | `/auth/tokens/:id` | Revoke an API token |
+| `GET` | `/audit-logs` | Audit log |
+| `GET` | `/activity` | Activity feed |
+| `GET` | `/webhook-deliveries` | Webhook delivery log (admin) |
+| `GET` | `/templates` | App templates |
+| `POST` | `/templates/:id/deploy` | Deploy from a template |

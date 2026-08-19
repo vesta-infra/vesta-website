@@ -50,20 +50,3 @@ const installCommand = `helm install vesta oci://ghcr.io/vesta-infra/charts/vest
     </div>
   </div>
 </section>
-
-<script>
-  const btn = document.getElementById('cta-copy-btn');
-  btn?.addEventListener('click', async () => {
-    const code = (btn as HTMLElement).dataset.code;
-    if (!code) return;
-    try {
-      await navigator.clipboard.writeText(code);
-      btn.textContent = 'copied!';
-      btn.classList.add('text-accent');
-      setTimeout(() => {
-        btn.textContent = 'copy';
-        btn.classList.remove('text-accent');
-      }, 2000);
-    } catch {}
-  });
-</script>

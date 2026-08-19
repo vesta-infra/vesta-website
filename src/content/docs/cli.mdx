@@ -15,66 +15,81 @@ The Vesta CLI is a Go binary built with Cobra. Install it and manage your entire
 cd cli && go build -o vesta . && mv vesta /usr/local/bin/
 ```
 
+## Global flags
+
+Every command accepts these:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--api-url` | `http://localhost:8090` | Vesta API server URL |
+| `--token` | — | API token used as `Authorization: Bearer <token>` |
+| `--help` | — | Show help for any command |
+
+Commands take an **app ID** — the name of the app as it exists in Vesta, not a display name.
+
 ## Commands
-
-### Deploy
-
-Deploy an application to a specific environment:
-
-```bash
-vesta deploy <app-name> --tag <image-tag> --env <environment>
-```
-
-**Examples:**
-
-```bash
-vesta deploy my-app --tag v1.2.3 --env production
-vesta deploy api-server --tag latest --env staging
-```
 
 ### Apps
 
-List and manage applications:
-
 ```bash
 vesta apps list
-vesta apps get <app-name>
-vesta apps delete <app-name>
+vesta apps get my-app
+```
+
+### Deploy
+
+Roll out a new image tag for an app. The repository and imagePullSecrets are already
+configured on the app, so only the tag changes:
+
+```bash
+vesta deploy my-app --tag v1.2.3
+vesta deploy my-app --tag v1.2.3 --reason "hotfix for #412" --commit 7f3c9a1
+```
+
+| Flag | Description |
+|------|-------------|
+| `--tag` | Image tag to deploy (**required**) |
+| `--reason` | Free-text reason recorded on the deployment |
+| `--commit` | Git commit SHA to record against the deployment |
+
+### Builds
+
+Build an image from the app's git repository using its configured strategy
+(`dockerfile`, `nixpacks`, or `buildpacks`):
+
+```bash
+vesta build my-app --environment production --branch main
+vesta build my-app --environment staging --commit 7f3c9a1
+```
+
+| Flag | Description |
+|------|-------------|
+| `--environment` | Target environment (**required**) |
+| `--branch` | Git branch to build |
+| `--commit` | Git commit SHA to build |
+
+List build history and stream logs:
+
+```bash
+vesta builds my-app
+vesta build-logs my-app 3f9c1a20-8d51-4c0e-9b77-2a1d5e6f0c13 --follow
 ```
 
 ### Secrets
 
-Manage secrets:
+Secret values are write-only over the API — the CLI can list metadata and unbind
+shared secrets. Creating and revealing secrets is done in the web UI or via the API.
 
 ```bash
-vesta secrets create <name> --type opaque
 vesta secrets list
-vesta secrets delete <name>
+vesta secrets unbind stripe-keys --app my-app
+vesta secrets unbind stripe-keys --app my-app --env staging
 ```
 
-### Builds
-
-Monitor build progress:
-
-```bash
-vesta builds list --app <app-name>
-vesta builds logs <build-id>
-```
+Omit `--env` to unbind the secret from every environment.
 
 ### Pipelines
 
-Manage deployment pipelines with multi-stage workflows:
-
 ```bash
 vesta pipelines list
-vesta pipelines get <pipeline-name>
 ```
-
-## Global Flags
-
-| Flag | Description |
-|------|-------------|
-| `--api-url` | Vesta API server URL |
-| `--token` | Authentication token |
-| `--output` | Output format (`table`, `json`, `yaml`) |
-| `--help` | Show help for any command |

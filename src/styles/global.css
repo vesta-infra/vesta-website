@@ -4,12 +4,38 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
+    scrollbar-color: #2d3f5e transparent;
+    scrollbar-width: thin;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Visible keyboard focus everywhere, without a ring on mouse clicks */
+  :focus-visible {
+    outline: 2px solid theme('colors.accent.DEFAULT');
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 
   body {
     @apply bg-surface-0 text-text-primary antialiased;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+
+  p, li {
+    text-wrap: pretty;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
   }
 
   ::selection {
@@ -32,13 +58,25 @@
     @apply bg-surface-2/80 border border-border rounded-xl shadow-card shadow-inner-glow backdrop-blur-sm;
   }
   .card-hover {
-    @apply card transition-all duration-300 ease-out
-           hover:border-accent/20 hover:shadow-card-hover hover:bg-surface-2;
+    @apply card transition-all duration-300 ease-out;
+  }
+  .card-hover:hover {
+    @apply border-accent/20 shadow-card-hover bg-surface-2;
+    transform: translateY(-4px);
   }
   .btn-primary {
     @apply px-6 py-3 bg-gradient-to-b from-accent to-accent-dim text-surface-0 rounded-lg text-sm font-semibold font-body
            transition-all duration-200 hover:shadow-glow hover:from-accent-glow hover:to-accent
            active:scale-[0.98] inline-flex items-center gap-2;
+  }
+  .skip-link {
+    /* w-max keeps it shrink-to-fit — as a child of the flex body it would otherwise
+       stretch to the viewport width and push the page 1rem wider than the screen. */
+    @apply absolute left-4 top-4 z-[100] w-max -translate-y-24 px-4 py-2 rounded-lg text-sm font-semibold
+           bg-accent text-surface-0 transition-transform duration-200;
+  }
+  .skip-link:focus {
+    @apply translate-y-0;
   }
   .btn-ghost {
     @apply px-6 py-3 text-sm text-text-secondary rounded-lg border border-border font-body
@@ -168,5 +206,45 @@
   .reveal.visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports ((animation-timeline: view()) and (animation-range: entry)) {
+      @keyframes reveal-in {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .reveal {
+        animation: reveal-in auto cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-timeline: view();
+        animation-range: entry 5% cover 30%;
+        transition: none;
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+}
+
+/* Honour the OS "reduce motion" setting: keep the layout, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

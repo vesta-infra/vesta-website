@@ -1,19 +1,54 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 
 interface Props {
   title?: string;
   description?: string;
+  /** Set for blog posts so the page is marked up as an article. */
+  article?: {
+    publishedTime: string;
+    author: string;
+  };
 }
 
 const {
   title = 'Vesta — Self-hosted PaaS for Kubernetes',
   description = 'Deploy applications to Kubernetes without writing manifests. Open-source, self-hosted Platform-as-a-Service with git push deploys, secrets management, autoscaling, and more.',
+  article,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+
+const structuredData = article
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: title,
+      description,
+      datePublished: article.publishedTime,
+      author: { '@type': 'Organization', name: article.author },
+      publisher: { '@type': 'Organization', name: 'Vesta' },
+      image: ogImage.href,
+      mainEntityOfPage: canonicalURL.href,
+    }
+  : {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'Vesta',
+      description,
+      url: Astro.site?.href,
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Kubernetes',
+      license: 'https://www.gnu.org/licenses/gpl-3.0.html',
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      softwareHelp: new URL('/docs/getting-started', Astro.site).href,
+      codeRepository: 'https://github.com/vesta-infra/vesta-kubernetes',
+    };
 ---
 
 <!DOCTYPE html>
@@ -22,53 +57,107 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content={description} />
+  <meta name="theme-color" content="#07090f" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/og.png" />
   <link rel="canonical" href={canonicalURL} />
+  <link rel="alternate" type="application/rss+xml" title="Vesta Blog" href={new URL('/rss.xml', Astro.site)} />
 
   <!-- Open Graph -->
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content={article ? 'article' : 'website'} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonicalURL} />
   <meta property="og:site_name" content="Vesta" />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Vesta — deploy to Kubernetes without a single manifest" />
+  {article && <meta property="article:published_time" content={article.publishedTime} />}
+  {article && <meta property="article:author" content={article.author} />}
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
     rel="stylesheet"
   />
 
   <title>{title}</title>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} is:inline />
+  <ClientRouter />
 </head>
 <body class="noise-bg min-h-screen flex flex-col">
+  <a href="#main" class="skip-link">Skip to content</a>
   <Header />
-  <main class="flex-1">
+  <main class="flex-1" id="main">
     <slot />
   </main>
   <Footer />
 
-  <!-- Scroll reveal observer -->
   <script>
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-    );
+    // Scroll reveal — only needed where scroll-driven animations aren't supported
+    function initScrollReveal() {
+      if (!CSS.supports('(animation-timeline: view()) and (animation-range: entry)')) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+        );
 
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+        document.querySelectorAll('.reveal').forEach((el) => {
+          if ((el as HTMLElement).dataset.observed) return;
+          (el as HTMLElement).dataset.observed = 'true';
+          observer.observe(el);
+        });
+      }
+    }
+
+    // Copy-to-clipboard for every terminal block on the page
+    function initCopyButtons() {
+      document.querySelectorAll('.copy-btn').forEach((btn) => {
+        const el = btn as HTMLElement;
+        if (el.dataset.bound) return;
+        el.dataset.bound = 'true';
+
+        el.addEventListener('click', async () => {
+          const code = el.dataset.code;
+          if (!code) return;
+          try {
+            await navigator.clipboard.writeText(code);
+            const original = el.textContent;
+            el.textContent = 'copied!';
+            el.classList.add('text-accent');
+            setTimeout(() => {
+              el.textContent = original;
+              el.classList.remove('text-accent');
+            }, 2000);
+          } catch {}
+        });
+      });
+    }
+
+    function init() {
+      initScrollReveal();
+      initCopyButtons();
+    }
+
+    // Run on initial load and after every client-side navigation
+    init();
+    document.addEventListener('astro:page-load', init);
   </script>
 </body>
 </html>

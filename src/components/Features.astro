@@ -2,37 +2,61 @@
 const features = [
   {
     title: 'Zero-Manifest Deploys',
-    description: 'Deploy from a pre-built image, git push, or API call. No Kubernetes YAML required — Vesta generates Deployments, Services, and Ingress for you.',
+    description: 'Deploy from a pre-built image, a git branch, or an API call. No Kubernetes YAML — Vesta generates the Deployments, Services, Ingress, and HPA for you.',
     icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.58-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /></svg>`,
     span: 'col-span-1 md:col-span-2',
   },
   {
-    title: 'Secrets Management',
-    description: 'Opaque, Docker registry, and TLS secrets with per-app bindings. Secure by default.',
+    title: 'Build From Git',
+    description: 'Connect a GitHub App and build straight from a branch or commit with Dockerfile, Nixpacks, or Buildpacks. Stream build logs live, cancel mid-flight.',
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>`,
+    span: 'col-span-1',
+  },
+  {
+    title: 'Live Logs & Pod Shell',
+    description: 'Tail logs over WebSocket, open an interactive shell into any pod, and browse or edit files in a running container — without leaving the dashboard.',
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>`,
+    span: 'col-span-1',
+  },
+  {
+    title: 'Secrets & Config',
+    description: 'Opaque, registry, and TLS secrets, per-app and per-environment. Share secrets across a project, keep values write-only, and reveal them only with the right role.',
     icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>`,
     span: 'col-span-1',
   },
   {
     title: 'Autoscaling',
-    description: 'CPU, memory, and custom metric-based HPA with configurable scaling behavior and thresholds.',
+    description: 'CPU, memory, and custom metric HPA with configurable scaling behavior — plus sleep and wake for environments that do not need to run overnight.',
     icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>`,
     span: 'col-span-1',
   },
   {
+    title: 'Teams, Roles & Audit',
+    description: 'Teams, project membership, and admin/developer/viewer roles, backed by scoped API tokens. Every action lands in an audit log and an activity feed.',
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>`,
+    span: 'col-span-1 md:col-span-2',
+  },
+  {
     title: 'Multi-Environment',
-    description: 'Organize apps into projects with per-environment config. Staging, production, and custom stages with independent pod sizes.',
+    description: 'Organize apps into projects with per-environment config, pod size presets, and approval gates. Clone an environment when you need another stage.',
     icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75 6.429 9.75m11.142 0l4.179 2.25-9.75 5.25-9.75-5.25 4.179-2.25" /></svg>`,
     span: 'col-span-1',
   },
   {
-    title: 'Private Registries',
-    description: 'ImagePullSecrets at project, app, and environment levels. Pull from any private Docker registry.',
-    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>`,
-    span: 'col-span-1 md:col-span-2',
+    title: 'Metrics & Alerts',
+    description: 'Per-app CPU and memory metrics, optional Prometheus scraping, a cluster health dashboard, and alert rules that fire when something drifts.',
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 010-5.304m5.304 0a3.75 3.75 0 010 5.304m-7.425 2.121a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-4.008-4.007-4.008-10.505 0-14.512m13.788 0c4.007 4.007 4.007 10.505 0 14.512M12 12h.008v.008H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>`,
+    span: 'col-span-1',
+  },
+  {
+    title: 'Day-2 Operations',
+    description: 'Rollback, restart, scale, stop and start, trigger CronJobs on demand, schedule deployments for later, and diagnose exactly why an app is unhealthy.',
+    icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+    span: 'col-span-1',
   },
   {
     title: 'Notifications',
-    description: 'Slack, Discord, Google Chat, webhooks with HMAC-SHA256, and email via SMTP. Stay informed on every deploy.',
+    description: 'Slack, Discord, Google Chat, webhooks with HMAC-SHA256, and email via SMTP — with delivery history so you can see what actually fired.',
     icon: `<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>`,
     span: 'col-span-1',
   },
@@ -47,7 +71,8 @@ const features = [
         Everything you need to ship.
       </h2>
       <p class="text-text-secondary text-lg max-w-2xl mx-auto">
-        A complete platform built on Kubernetes primitives. No vendor lock-in, no hidden complexity.
+        A complete platform built on Kubernetes primitives — builds, secrets, RBAC, metrics,
+        and day-2 operations. No vendor lock-in, no hidden complexity.
       </p>
     </div>
 

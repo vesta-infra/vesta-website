@@ -25,7 +25,7 @@ export default {
         text: {
           primary: '#e8ecf4',
           secondary: '#7c8ba1',
-          tertiary: '#475569',
+          tertiary: '#64748b',
           inverse: '#07090f',
         },
       },

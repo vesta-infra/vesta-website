@@ -53,9 +53,11 @@ const repoUrl = 'https://github.com/vesta-infra/vesta-kubernetes';
 
     <!-- Mobile hamburger -->
     <button
-      class="md:hidden relative w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary"
+      class="md:hidden relative w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg"
       id="mobile-menu-btn"
       aria-label="Toggle menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
     >
       <svg class="w-5 h-5" id="menu-icon-open" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -98,49 +100,84 @@ const repoUrl = 'https://github.com/vesta-infra/vesta-kubernetes';
 </header>
 
 <script>
-  // Mobile menu toggle
-  const btn = document.getElementById('mobile-menu-btn');
-  const menu = document.getElementById('mobile-menu');
-  const iconOpen = document.getElementById('menu-icon-open');
-  const iconClose = document.getElementById('menu-icon-close');
+  function initHeader() {
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const iconOpen = document.getElementById('menu-icon-open');
+    const iconClose = document.getElementById('menu-icon-close');
+    const header = document.getElementById('site-header');
 
-  btn?.addEventListener('click', () => {
-    const isOpen = !menu?.classList.contains('hidden');
-    menu?.classList.toggle('hidden');
-    iconOpen?.classList.toggle('hidden');
-    iconClose?.classList.toggle('hidden');
-  });
+    function setMenu(open: boolean) {
+      menu?.classList.toggle('hidden', !open);
+      iconOpen?.classList.toggle('hidden', open);
+      iconClose?.classList.toggle('hidden', !open);
+      btn?.setAttribute('aria-expanded', String(open));
+    }
 
-  // Fetch GitHub star count
-  async function fetchStars() {
+    // Astro may both re-run this script and fire astro:page-load after a client-side
+    // navigation, so every binding below is guarded against running twice on one node.
+    if (btn && !btn.dataset.bound) {
+      btn.dataset.bound = 'true';
+      btn.addEventListener('click', () => {
+        setMenu(menu?.classList.contains('hidden') ?? false);
+      });
+    }
+
+    // Close the menu when a link inside it is tapped (same-page hashes don't re-render)
+    menu?.querySelectorAll('a').forEach((link) => {
+      if (link.dataset.bound) return;
+      link.dataset.bound = 'true';
+      link.addEventListener('click', () => setMenu(false));
+    });
+
+    // Header border darkens once scrolled
+    function syncHeaderBorder() {
+      const scrolled = window.scrollY > 10;
+      header?.classList.toggle('border-border', scrolled);
+      header?.classList.toggle('border-border/50', !scrolled);
+    }
+    syncHeaderBorder();
+    if (header && !header.dataset.bound) {
+      header.dataset.bound = 'true';
+      window.addEventListener('scroll', syncHeaderBorder, { passive: true });
+      document.addEventListener('astro:before-swap', () => {
+        window.removeEventListener('scroll', syncHeaderBorder);
+      }, { once: true });
+    }
+
+    renderStars();
+  }
+
+  // GitHub star count — cached for the session to stay well inside the
+  // unauthenticated rate limit (60 req/hr/IP).
+  const STAR_CACHE_KEY = 'vesta:stars';
+
+  function paintStars(count: number) {
+    const el = document.getElementById('star-count');
+    if (!el) return;
+    el.textContent = count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count.toString();
+  }
+
+  async function renderStars() {
+    const cached = sessionStorage.getItem(STAR_CACHE_KEY);
+    if (cached !== null) {
+      paintStars(Number(cached));
+      return;
+    }
     try {
       const res = await fetch('https://api.github.com/repos/vesta-infra/vesta-kubernetes');
       if (!res.ok) return;
       const data = await res.json();
       const count = data.stargazers_count;
       if (typeof count === 'number') {
-        const el = document.getElementById('star-count');
-        if (el) {
-          el.textContent = count >= 1000
-            ? `${(count / 1000).toFixed(1)}k`
-            : count.toString();
-        }
+        sessionStorage.setItem(STAR_CACHE_KEY, String(count));
+        paintStars(count);
       }
     } catch {
       // silently fail — badge stays as "Star"
     }
   }
-  fetchStars();
 
-  // Header background on scroll
-  const header = document.getElementById('site-header');
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 10) {
-      header?.classList.add('border-border');
-      header?.classList.remove('border-border/50');
-    } else {
-      header?.classList.remove('border-border');
-      header?.classList.add('border-border/50');
-    }
-  });
+  initHeader();
+  document.addEventListener('astro:page-load', initHeader);
 </script>

@@ -29,6 +29,9 @@ kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/
 kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestasecrets.yaml
 ```
 
+> Helm does not update CRDs on `helm upgrade`. Re-apply these manually whenever you upgrade
+> Vesta, so schema changes (health checks, per-environment resources) are picked up.
+
 ## 2. Create the database secret
 
 Vesta's API server requires a PostgreSQL database. Create a secret with your connection string:
@@ -52,18 +55,27 @@ helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \
 
 ## 4. Deploy your first app
 
-Once Vesta is running, deploy an application with the CLI:
+Create a project and an app in the web UI (or via the API), then ship it.
+
+Build straight from a git branch:
 
 ```bash
-vesta deploy my-app --tag v1.2.3 --env production
+vesta build my-app --environment production --branch main
 ```
 
-Or via the API:
+Or roll out a pre-built image tag:
+
+```bash
+vesta deploy my-app --tag v1.2.3
+```
+
+The same thing over the API — `environment` is required:
 
 ```bash
 curl -X POST https://<api-host>/api/v1/apps/my-app/deploy \
   -H "Authorization: Bearer <token>" \
-  -d '{"tag": "v1.2.3", "environment": "production"}'
+  -H "Content-Type: application/json" \
+  -d '{"environment": "production", "tag": "v1.2.3"}'
 ```
 
 ## Next steps

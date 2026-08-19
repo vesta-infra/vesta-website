@@ -7,29 +7,42 @@ const lines = [
   { prompt: '', text: '✓ API server running', delay: 1500, color: 'green' },
   { prompt: '', text: '✓ UI dashboard ready', delay: 1800, color: 'green' },
   { prompt: '', text: '', delay: 2200 },
-  { prompt: '$ ', text: 'vesta deploy my-app --tag v1.2.3 --env production', delay: 2600 },
+  { prompt: '$ ', text: 'vesta build my-app --environment production --branch main', delay: 2600 },
   { prompt: '', text: '', delay: 3000 },
-  { prompt: '', text: '→ Building from image: my-app:v1.2.3', delay: 3200, color: 'secondary' },
-  { prompt: '', text: '→ Deploying to production...', delay: 3600, color: 'secondary' },
-  { prompt: '', text: '✓ Deployment successful', delay: 4200, color: 'green' },
+  { prompt: '', text: '→ Strategy: nixpacks · branch main', delay: 3200, color: 'secondary' },
+  { prompt: '', text: '→ Building 7f3c9a1...', delay: 3600, color: 'secondary' },
+  { prompt: '', text: '✓ Image pushed — my-app:7f3c9a1', delay: 4000, color: 'green' },
+  { prompt: '', text: '✓ Deployed to production', delay: 4200, color: 'green' },
   { prompt: '', text: '  https://my-app.apps.getvesta.sh', delay: 4400, color: 'accent' },
 ];
 ---
 
 <div class="relative rounded-xl overflow-hidden border border-border bg-surface-1/90 shadow-card backdrop-blur-sm">
   <!-- Terminal chrome -->
-  <div class="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-surface-2/50">
-    <div class="flex gap-1.5">
-      <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></div>
-      <div class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></div>
-      <div class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></div>
+  <div class="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-surface-2/50">
+    <div class="flex items-center gap-2">
+      <div class="flex gap-1.5">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></div>
+        <div class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></div>
+        <div class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></div>
+      </div>
+      <span class="text-[11px] font-mono text-text-tertiary ml-2">terminal — zsh</span>
     </div>
-    <span class="text-[11px] font-mono text-text-tertiary ml-2">terminal — zsh</span>
+    <button
+      class="replay-btn text-[11px] font-mono text-text-tertiary hover:text-accent transition-colors flex items-center gap-1 cursor-pointer"
+      title="Replay terminal animation"
+      id="terminal-replay-btn"
+    >
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+      </svg>
+      replay
+    </button>
   </div>
 
   <!-- Terminal body -->
   <div class="p-5 font-mono text-[13px] leading-relaxed min-h-[280px]" id="terminal-body">
-    {lines.map((line, i) => (
+    {lines.map((line) => (
       <div
         class="terminal-line opacity-0"
         data-delay={line.delay}
@@ -54,25 +67,56 @@ const lines = [
 </div>
 
 <script>
-  const terminalObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const lines = entry.target.querySelectorAll('.terminal-line');
-          lines.forEach((line) => {
-            const delay = parseInt((line as HTMLElement).dataset.delay || '0');
-            setTimeout(() => {
-              line.classList.remove('opacity-0');
-              line.classList.add('animate-fade-in');
-            }, delay);
-          });
-          terminalObserver.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.3 }
-  );
+  function initTerminalDemo() {
+    const terminalBody = document.getElementById('terminal-body');
+    const replayBtn = document.getElementById('terminal-replay-btn');
 
-  const terminalBody = document.getElementById('terminal-body');
-  if (terminalBody) terminalObserver.observe(terminalBody);
+    if (!terminalBody || terminalBody.dataset.bound) return;
+    terminalBody.dataset.bound = 'true';
+
+    let activeTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+    function runTerminalAnimation() {
+      activeTimeouts.forEach(clearTimeout);
+      activeTimeouts = [];
+
+      const lines = terminalBody!.querySelectorAll('.terminal-line');
+      lines.forEach((line) => {
+        line.classList.remove('animate-fade-in');
+        line.classList.add('opacity-0');
+
+        const delay = parseInt((line as HTMLElement).dataset.delay || '0');
+        const t = setTimeout(() => {
+          line.classList.remove('opacity-0');
+          line.classList.add('animate-fade-in');
+        }, delay);
+        activeTimeouts.push(t);
+      });
+    }
+
+    const terminalObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            runTerminalAnimation();
+            terminalObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    terminalObserver.observe(terminalBody);
+
+    replayBtn?.addEventListener('click', () => {
+      runTerminalAnimation();
+    });
+
+    // The observer belongs to this DOM; drop it before the page is swapped out.
+    document.addEventListener('astro:before-swap', () => terminalObserver.disconnect(), { once: true });
+  }
+
+  // Initialize
+  initTerminalDemo();
+  document.addEventListener('astro:page-load', initTerminalDemo);
 </script>

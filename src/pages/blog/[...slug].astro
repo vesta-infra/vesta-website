@@ -14,7 +14,11 @@ const { entry } = Astro.props;
 const { Content } = await entry.render();
 ---
 
-<BaseLayout title={`${entry.data.title} — Vesta Blog`} description={entry.data.description}>
+<BaseLayout
+  title={`${entry.data.title} — Vesta Blog`}
+  description={entry.data.description}
+  article={{ publishedTime: entry.data.date.toISOString(), author: entry.data.author }}
+>
   <div class="pt-16">
     <article class="py-24 lg:py-32">
       <div class="max-w-3xl mx-auto px-6">

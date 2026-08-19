@@ -43,6 +43,46 @@ const currentPath = Astro.url.pathname.replace(/\/$/, '');
 <BaseLayout title={title} description={description}>
   <div class="pt-16">
     <div class="max-w-6xl mx-auto px-6 py-12 lg:py-16">
+      <!-- Mobile docs nav -->
+      <details class="lg:hidden card mb-8 overflow-hidden">
+        <summary class="flex items-center justify-between px-5 py-4 cursor-pointer select-none list-none text-sm text-text-primary font-medium">
+          Documentation
+          <svg class="w-4 h-4 text-text-tertiary transition-transform group-open:rotate-180 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </summary>
+        <nav class="px-5 pb-5 pt-1 border-t border-border/30 space-y-5">
+          {docsNav.map(group => (
+            <div>
+              <h4 class="text-[11px] font-mono font-semibold text-text-secondary uppercase tracking-[0.1em] mb-2">
+                {group.section}
+              </h4>
+              <ul class="space-y-0.5">
+                {group.items.map(item => {
+                  const href = `/docs/${item.slug}`;
+                  const isActive = currentPath === href;
+                  return (
+                    <li>
+                      <a
+                        href={href}
+                        class:list={[
+                          'block px-3 py-2 text-sm rounded-lg transition-colors',
+                          isActive
+                            ? 'text-accent bg-accent/8'
+                            : 'text-text-secondary hover:text-text-primary hover:bg-surface-3/50',
+                        ]}
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+      </details>
+
       <div class="flex gap-10 lg:gap-16">
         <!-- Sidebar -->
         <aside class="hidden lg:block w-56 shrink-0">

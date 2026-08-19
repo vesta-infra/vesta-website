@@ -1,7 +1,13 @@
 ---
 import Logo from './Logo.astro';
 
-const footerLinks = {
+interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+const footerLinks: Record<string, FooterLink[]> = {
   Product: [
     { label: 'Features', href: '/#features' },
     { label: 'Pricing', href: '/pricing' },

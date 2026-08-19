@@ -10,15 +10,15 @@ const steps = [
   {
     number: '02',
     title: 'Push',
-    description: 'Deploy your application with a single CLI command, API call, or git push. Zero YAML.',
-    code: `vesta deploy my-app --tag v1.2.3 --env production`,
+    description: 'Build straight from a git branch, or ship a pre-built image. One command, no YAML.',
+    code: `vesta build my-app --environment production --branch main`,
   },
   {
     number: '03',
     title: 'Live',
     description: 'Your app is running with automatic ingress, TLS, health checks, and autoscaling. Done.',
-    code: `✓ Deployment successful
-  https://my-app.apps.getvesta.sh
+    code: `✓ Build succeeded — my-app:7f3c9a1
+✓ Deployed to production
 
   Replicas:     2/2 ready
   Ingress:      my-app.apps.getvesta.sh
@@ -44,10 +44,9 @@ const steps = [
       {steps.map((step, i) => (
         <div class:list={[
           'reveal grid lg:grid-cols-2 gap-8 lg:gap-16 items-center',
-          i % 2 === 1 && 'lg:direction-rtl',
         ]} style={`transition-delay: ${i * 100}ms`}>
           <!-- Text -->
-          <div class:list={[i % 2 === 1 && 'lg:order-2', 'lg:direction-ltr']}>
+          <div class:list={[i % 2 === 1 && 'lg:order-2']}>
             <div class="flex items-center gap-4 mb-4">
               <span class="font-mono text-sm text-accent/60">{step.number}</span>
               <div class="h-px flex-1 bg-gradient-to-r from-accent/20 to-transparent"></div>
@@ -57,7 +56,7 @@ const steps = [
           </div>
 
           <!-- Code block -->
-          <div class:list={[i % 2 === 1 && 'lg:order-1', 'lg:direction-ltr']}>
+          <div class:list={[i % 2 === 1 && 'lg:order-1']}>
             <div class="relative rounded-xl border border-border bg-surface-1/90 overflow-hidden group">
               <div class="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-surface-2/30">
                 <div class="flex items-center gap-2">
@@ -79,22 +78,3 @@ const steps = [
     </div>
   </div>
 </section>
-
-<script>
-  document.querySelectorAll('.copy-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const code = (btn as HTMLElement).dataset.code;
-      if (!code) return;
-      try {
-        await navigator.clipboard.writeText(code);
-        const original = btn.textContent;
-        btn.textContent = 'copied!';
-        btn.classList.add('text-accent');
-        setTimeout(() => {
-          btn.textContent = original;
-          btn.classList.remove('text-accent');
-        }, 2000);
-      } catch {}
-    });
-  });
-</script>
