@@ -1,11 +1,12 @@
 ---
 const lines = [
-  { prompt: '$ ', text: 'helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \\', delay: 0 },
-  { prompt: '  ', text: '  -n vesta-system --create-namespace', delay: 400 },
-  { prompt: '', text: '', delay: 800 },
-  { prompt: '', text: '✓ Operator deployed', delay: 1200, color: 'green' },
-  { prompt: '', text: '✓ API server running', delay: 1500, color: 'green' },
-  { prompt: '', text: '✓ UI dashboard ready', delay: 1800, color: 'green' },
+  { prompt: '$ ', text: 'curl -fsSL https://getvesta.sh/install.sh | sh', delay: 0 },
+  { prompt: '', text: '', delay: 600 },
+  { prompt: '', text: '✓ cluster reachable', delay: 900, color: 'green' },
+  { prompt: '', text: '✓ CRDs applied', delay: 1200, color: 'green' },
+  { prompt: '', text: '✓ Operator deployed', delay: 1500, color: 'green' },
+  { prompt: '', text: '✓ API server running', delay: 1800, color: 'green' },
+  { prompt: '', text: '✓ UI dashboard ready', delay: 2000, color: 'green' },
   { prompt: '', text: '', delay: 2200 },
   { prompt: '$ ', text: 'vesta build my-app --environment production --branch main', delay: 2600 },
   { prompt: '', text: '', delay: 3000 },

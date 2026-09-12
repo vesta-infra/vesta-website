@@ -11,8 +11,51 @@ The Vesta CLI is a Go binary built with Cobra. Install it and manage your entire
 
 ## Installation
 
+### Install script (macOS & Linux)
+
 ```bash
-cd cli && go build -o vesta . && mv vesta /usr/local/bin/
+curl -fsSL https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/develop/install.sh | sh
+```
+
+The script detects your OS and architecture, verifies the SHA-256 checksum of the
+download, and installs `vesta` into `/usr/local/bin`. Both are overridable:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VESTA_VERSION` | latest release | Version to install, e.g. `0.6.2` |
+| `VESTA_INSTALL_DIR` | `/usr/local/bin` | Where the binary is placed |
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/develop/install.sh \
+  | VESTA_VERSION=0.6.2 VESTA_INSTALL_DIR="$HOME/.local/bin" sh
+```
+
+### Manual download
+
+Every release ships archives on the
+[releases page](https://github.com/vesta-infra/vesta-kubernetes/releases):
+`vesta_<version>_<os>_<arch>.tar.gz` for macOS and Linux (amd64 and arm64), and
+`vesta_<version>_windows_amd64.zip` for Windows. Verify your download against
+`checksums.txt`, extract it, and move `vesta` onto your `PATH`.
+
+### From source
+
+```bash
+make cli-install                          # /usr/local/bin/vesta
+make cli-install CLI_INSTALL_DIR=~/.local/bin
+```
+
+### Verify
+
+```bash
+vesta version
+```
+
+```
+vesta 0.6.2
+  commit:  97ef728
+  built:   2026-08-20T13:35:13Z
+  go:      go1.22 darwin/arm64
 ```
 
 ## Global flags
@@ -29,6 +72,38 @@ Commands take an **app ID** — the name of the app as it exists in Vesta, not a
 
 ## Commands
 
+### Platform
+
+Install, upgrade and inspect Vesta itself. These wrap Helm, so there is nothing here you
+could not do by hand — they remove the flags you would otherwise have to remember:
+
+```bash
+vesta install --postgres
+vesta install --database-url "postgres://user:pass@db:5432/vesta?sslmode=disable"
+vesta upgrade
+vesta status
+```
+
+`vesta upgrade` takes no configuration flags. The installed values are carried forward,
+and re-specifying them on upgrade is how a setting nobody meant to touch quietly changes.
+Add `--dry-run` to either to print the Helm command instead of running it.
+
+`vesta status` shows the running version of each component and whether a newer release
+exists.
+
+### Updating the CLI
+
+```bash
+vesta self-update
+vesta self-update --version 0.7.8
+vesta self-update --dry-run
+```
+
+Downloads the release for your platform, verifies it against the release's published
+`checksums.txt`, and replaces the running binary. The replacement is a rename, so an
+interrupted update leaves the working binary in place. It refuses to replace a development
+build, or to go backwards, without `--force`.
+
 ### Apps
 
 ```bash
@@ -42,8 +117,8 @@ Roll out a new image tag for an app. The repository and imagePullSecrets are alr
 configured on the app, so only the tag changes:
 
 ```bash
-vesta deploy my-app --tag v1.2.3
-vesta deploy my-app --tag v1.2.3 --reason "hotfix for #412" --commit 7f3c9a1
+vesta deploy my-app --tag v1.2.3 --environment production
+vesta deploy my-app --tag v1.2.3 --environment production --reason "hotfix for #412" --commit 7f3c9a1
 ```
 
 | Flag | Description |

@@ -1,6 +1,5 @@
 ---
-const installCommand = `helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \\
-  -n vesta-system --create-namespace`;
+const installCommand = `curl -fsSL https://getvesta.sh/install.sh | sh`;
 ---
 
 <section class="relative py-24 lg:py-32">

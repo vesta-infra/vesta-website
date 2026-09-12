@@ -11,47 +11,81 @@ Get Vesta running on your Kubernetes cluster in under 5 minutes.
 
 ## Prerequisites
 
-- Kubernetes cluster (v1.27+)
-- Helm 3
-- PostgreSQL database (for the API server)
-- (Optional) cert-manager for TLS
-- (Optional) metrics-server for autoscaling
+- Kubernetes 1.27+
+- `kubectl` and Helm 3
+- PostgreSQL — or let Vesta deploy one for you
+- (Optional) cert-manager for TLS, metrics-server for autoscaling
 
-## 1. Install CRDs
-
-Apply the Custom Resource Definitions that Vesta uses to manage your applications:
+## 1. Install
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaapps.yaml
-kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaprojects.yaml
-kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaconfigs.yaml
-kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestaenvironments.yaml
-kubectl apply -f https://raw.githubusercontent.com/vesta-infra/vesta-kubernetes/main/deploy/helm/vesta/crds/kubernetes.getvesta.sh_vestasecrets.yaml
+curl -fsSL https://getvesta.sh/install.sh | sh
 ```
 
-> Helm does not update CRDs on `helm upgrade`. Re-apply these manually whenever you upgrade
-> Vesta, so schema changes (health checks, per-environment resources) are picked up.
+Checks your prerequisites, deploys Vesta with a bundled PostgreSQL, waits for it to come
+up, and prints the URL. Re-running it is also the upgrade path.
 
-## 2. Create the database secret
+To point at a database you already run:
 
-Vesta's API server requires a PostgreSQL database. Create a secret with your connection string:
+```bash
+VESTA_DATABASE_URL="postgres://user:pass@db-host:5432/vesta?sslmode=disable" \
+  sh -c "$(curl -fsSL https://getvesta.sh/install.sh)"
+```
+
+Other variables: `VESTA_VERSION`, `VESTA_NAMESPACE`, `VESTA_RELEASE`, `VESTA_INGRESS_CLASS`,
+and `VESTA_DRY_RUN=1` to print the Helm command without running it.
+
+### With Helm directly
+
+Create the namespace first, carrying the metadata Helm uses to recognise its own
+resources, then install:
 
 ```bash
 kubectl create namespace vesta-system
+kubectl annotate namespace vesta-system \
+  meta.helm.sh/release-name=vesta \
+  meta.helm.sh/release-namespace=vesta-system
+kubectl label namespace vesta-system app.kubernetes.io/managed-by=Helm
 
-kubectl create secret generic vesta-db-secret \
-  -n vesta-system \
-  --from-literal=DATABASE_URL="postgres://user:password@db-host:5432/vesta?sslmode=disable"
-```
-
-## 3. Install with Helm
-
-```bash
 helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \
-  -n vesta-system --create-namespace \
-  --set api.database.existingSecret=vesta-db-secret \
+  -n vesta-system \
+  --set postgres.enabled=true \
   --set config.ingressClassName=traefik
 ```
+
+Not `--create-namespace`: that makes the namespace without the ownership metadata, and the
+chart's own `Namespace` object then collides with it.
+
+CRDs are applied by the chart — there is nothing to `kubectl apply` by hand, on install or
+on upgrade.
+
+Set `config.ingressClassName` to match your ingress controller. Leaving it empty produces
+app ingresses with no class, which no controller claims, and every app URL returns 404.
+
+## 2. Open the dashboard
+
+```bash
+kubectl port-forward -n vesta-system svc/vesta-ui 8080:80
+```
+
+Then visit `http://localhost:8080/setup` to create the first admin account.
+
+To serve it on a real hostname, set that under **Settings → SSL Certificates** once you are
+in, or pass `--set ui.ingress.enabled=true --set ui.ingress.host=vesta.example.com` at
+install time.
+
+## 3. Upgrading
+
+```bash
+helm upgrade vesta oci://ghcr.io/vesta-infra/charts/vesta \
+  -n vesta-system --reset-then-reuse-values
+```
+
+CRDs come with it. `--reset-then-reuse-values` rather than `--reuse-values`: the latter
+carries your old values forward wholesale and silently drops new chart defaults.
+
+An admin can also upgrade from **Settings → System**, where Vesta shows the running version
+and whether a newer release exists.
 
 ## 4. Deploy your first app
 
@@ -66,7 +100,7 @@ vesta build my-app --environment production --branch main
 Or roll out a pre-built image tag:
 
 ```bash
-vesta deploy my-app --tag v1.2.3
+vesta deploy my-app --tag v1.2.3 --environment production
 ```
 
 The same thing over the API — `environment` is required:

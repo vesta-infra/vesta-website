@@ -3,9 +3,8 @@ const steps = [
   {
     number: '01',
     title: 'Install',
-    description: 'One Helm command to deploy the entire platform — Operator, API, and UI — to your cluster.',
-    code: `helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \\
-  -n vesta-system --create-namespace`,
+    description: 'One command deploys the whole platform — Operator, API, UI and a database — to your cluster.',
+    code: `curl -fsSL https://getvesta.sh/install.sh | sh`,
   },
   {
     number: '02',

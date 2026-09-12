@@ -28,14 +28,13 @@ Vesta sits on top of your Kubernetes cluster and provides:
 Install Vesta with a single Helm command:
 
 ```bash
-helm install vesta oci://ghcr.io/vesta-infra/charts/vesta \
-  -n vesta-system --create-namespace
+curl -fsSL https://getvesta.sh/install.sh | sh
 ```
 
 Then deploy your first app:
 
 ```bash
-vesta deploy my-app --tag v1.2.3 --env production
+vesta deploy my-app --tag v1.2.3 --environment production
 ```
 
 That's it. No Deployments, no Services, no Ingress YAML. Vesta handles everything.
