@@ -99,9 +99,23 @@ build_args() {
     --namespace "$NAMESPACE" \
     --wait --timeout 10m
 
+  # Re-running this script is the documented upgrade path, so it must not quietly undo
+  # settings made since the first install -- a dashboard hostname, a certificate issuer.
+  # Without a reuse flag helm falls back to chart defaults plus whatever is passed here,
+  # and those settings disappear. The flag is only valid against an existing release, so
+  # it is added only when one exists.
+  if helm status "$RELEASE" -n "$NAMESPACE" >/dev/null 2>&1; then
+    set -- "$@" --reset-then-reuse-values
+  fi
+
   [ -n "$VERSION" ] && set -- "$@" --version "$VERSION"
 
   if [ -n "${VESTA_DATABASE_URL:-}" ]; then
+    # Both, explicitly. Setting only the URL leaves a bundled database running and
+    # ignored while the API talks to the remote one -- and with --reset-then-reuse-values
+    # in play, postgres.enabled would be carried forward from the previous install rather
+    # than falling back to its default.
+    set -- "$@" --set postgres.enabled=false
     set -- "$@" --set-string "api.database.url=${VESTA_DATABASE_URL}"
   else
     # No database given, so bring one. Evaluating Vesta should not require standing up
@@ -144,8 +158,16 @@ main() {
   log ""
   if [ -z "${VESTA_DATABASE_URL:-}" ]; then
     log "  Note: a bundled PostgreSQL was deployed. It is fine for evaluation, but it is"
-    log "  a database you have to back up and operate. For production, reinstall with"
-    log "  VESTA_DATABASE_URL pointing at a managed instance."
+    log "  a database you have to back up and operate."
+    log ""
+    log "  To move to a managed database later, dump this one first -- re-running with"
+    log "  VESTA_DATABASE_URL switches the connection but copies nothing, and Vesta's"
+    log "  users, teams, tokens and audit history live in it:"
+    log ""
+    log "    kubectl exec -n ${NAMESPACE} ${RELEASE}-postgres-0 -- \\"
+    log "      env PGPASSWORD=\$(kubectl get secret ${RELEASE}-postgres -n ${NAMESPACE} \\"
+    log "      -o jsonpath='{.data.password}' | base64 -d) \\"
+    log "      pg_dump -U vesta -d vesta --no-owner --no-acl > vesta-dump.sql"
     log ""
   fi
 }
