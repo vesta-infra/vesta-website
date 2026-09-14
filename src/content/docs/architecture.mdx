@@ -1,13 +1,13 @@
 ---
 title: "Architecture"
 description: "How Vesta's components work together to provide a complete PaaS."
-order: 3
+order: 4
 section: "Concepts"
 ---
 
 # Architecture
 
-Vesta consists of four independently deployable components that work together to provide a complete Platform-as-a-Service on Kubernetes.
+Vesta consists of five independently deployable components that work together to provide a complete Platform-as-a-Service on Kubernetes.
 
 ## Components
 
@@ -16,10 +16,13 @@ Vesta consists of four independently deployable components that work together to
 The operator watches Vesta's Custom Resource Definitions (CRDs) and reconciles the corresponding Kubernetes resources:
 
 - **VestaApp** → Deployment, Service, Ingress, HPA
-- **VestaProject** → Namespace, ResourceQuota
-- **VestaEnvironment** → Namespace, environment-scoped config
+- **VestaProject** → project-scoped defaults and quota
+- **VestaEnvironment** → Namespace, ResourceQuota, LimitRange, NetworkPolicy
+- **VestaAddon** → StatefulSet, Service, and a Secret holding the connection string
 - **VestaSecret** → Kubernetes Secret with bindings
-- **VestaConfig** → Platform-wide configuration
+- **VestaMiddleware** → Traefik middleware attached to an app's routes
+- **VestaLogDrain** → a collector shipping pod logs off-cluster
+- **VestaConfig** → platform-wide configuration
 
 ### API Server (Go / Gin)
 
@@ -35,6 +38,16 @@ The REST API server handles all user-facing operations:
 
 A dashboard for managing the platform through a browser. Provides visual management of projects, apps, secrets, and deployments.
 
+### Activator (Go)
+
+A small proxy that stands in for an application scaled to zero. When a request arrives for a
+sleeping app, the activator wakes it, waits for it to become ready, and proxies the request
+that arrived — so the first caller after an idle period waits rather than seeing an error.
+
+It runs in application namespaces with a much narrower ServiceAccount than the operator's, and
+reads everything it needs from the Ingress it already watches. It has no access to VestaApp
+beyond the single patch that wakes one.
+
 ### CLI (Go / Cobra)
 
 A command-line tool for all operations:
@@ -47,11 +60,16 @@ vesta secrets list
 
 ## Request Flow
 
-1. User issues a deploy command (CLI, API, or git push)
+1. User issues a deploy command (CLI, API, UI, or git push)
 2. API server validates the request and creates/updates a **VestaApp** CRD
 3. Operator detects the CRD change and reconciles Kubernetes resources
 4. Deployment rolls out, Service exposes the app, Ingress routes traffic
-5. Notifications fire on success/failure
+5. Notifications fire on success/failure, and the commit status is reported back to the git provider
+
+Desired state lives in `spec`, not `status`. Sleeping or stopping an app is a change to
+`spec.desiredState`; `status` only ever reports what is actually true. The distinction is
+load-bearing — a CRD with a status subresource silently discards a status written through the
+main resource, so an instruction placed there would never arrive.
 
 ## Directory Structure
 

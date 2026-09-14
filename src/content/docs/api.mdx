@@ -1,7 +1,7 @@
 ---
 title: "API Reference"
 description: "REST API endpoints for the Vesta API server."
-order: 5
+order: 6
 section: "Reference"
 ---
 
@@ -35,6 +35,7 @@ Tokens carry scopes (`read`, `write`, `deploy`) and users carry roles (`admin`, 
 | `POST` | `/auth/reset-password` | Complete a password reset |
 | `POST` | `/auth/accept-invite` | Accept a team invitation |
 | `POST` | `/webhooks/:provider` | Inbound webhook (verified by signature) |
+| `POST` | `/webhooks/:provider/:connectionId` | Inbound webhook for a specific git connection |
 
 ## Projects & environments
 
@@ -158,6 +159,74 @@ To deploy from git instead of a pre-built tag, send `type: "git"` with a `git` r
 | `GET` | `/projects/:projectId/notifications/history` | Delivery history |
 | `GET` · `POST` | `/projects/:projectId/alerts` | Manage alert rules |
 | `PUT` · `DELETE` | `/projects/:projectId/alerts/:ruleId` | Update or delete an alert rule |
+
+## Add-ons
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` · `POST` | `/projects/:projectId/addons` | List or create managed datastores |
+| `DELETE` | `/projects/:projectId/addons/:name` | Delete an add-on |
+| `GET` | `/projects/:projectId/addons/:name/credentials` | Connection details for an add-on |
+| `POST` | `/apps/:appId/addons` | Bind an add-on's credentials into an app |
+| `DELETE` | `/apps/:appId/addons/:name` | Remove a binding |
+
+## Cost & quotas
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/projects/:projectId/costs` | Project cost, grouped by app or environment |
+| `GET` | `/apps/:appId/costs` | One app's cost |
+| `GET` | `/projects/:projectId/environments/:env/quota` | Configured quota, plus what is committed and used |
+| `PUT` | `/projects/:projectId/environments/:env/quota` | Set an environment's quota |
+
+Cost responses accept `?window=` (`24h`, `7d`, `30d`, `90d`, or a Go duration) and
+`?groupBy=app|environment`. Every response reports the rate card it used and whether those
+rates are the built-in estimate, so a figure can be checked rather than taken on trust.
+
+Quota responses report `committed` — what the environment's apps add up to at their
+autoscaling maximum — alongside `wouldExceed`, which says whether enforcing the configured
+quota would already refuse work.
+
+## Git connections & repositories
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` · `POST` | `/settings/git-connections` | List or add a GitHub, GitLab or Bitbucket connection |
+| `DELETE` | `/settings/git-connections/:connectionId` | Remove a connection |
+| `GET` | `/git/repos` | Repositories across every connection |
+| `GET` | `/git/branches` | Branches for a repository |
+
+## Registry credentials
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` · `POST` | `/secrets/registry` | List or create registry credentials |
+| `DELETE` | `/secrets/registry/:name` | Delete a credential |
+| `GET` | `/secrets/registry/:name/repositories` | Repositories the credential can see |
+| `GET` | `/secrets/registry/:name/tags` | Tags for a repository (`?repository=`) |
+| `POST` | `/secrets/registry/:name/test` | Check the credential against its registry |
+
+Creating a credential accepts `scope` (`global` or `project`) and, for a project-scoped one,
+`project`. Only an administrator can create a global credential. A credential you may not use
+is absent from the listing and returns `404` rather than `403` when addressed directly.
+
+## Platform settings
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/settings/security` | Pod hardening profile, network isolation, default secret scope |
+| `PUT` | `/settings/security` | Set the platform security posture (admin) |
+| `GET` · `PUT` | `/settings/rbac` | Per-project role enforcement |
+| `GET` | `/users/me/permissions` | What the caller may do, per project and environment |
+
+`GET /settings/security` is readable by any authenticated user; writing it requires an
+administrator. Under the `restricted` profile an app runs as a non-root user with a read-only
+filesystem, so a developer who cannot see the profile has no way to explain their own app's
+failure to start.
+
+Its `observed` field reports, per environment, whether network policies are actually being
+enforced — which is a different question from whether isolation is turned on, because
+NetworkPolicy is enforced by the cluster's network plugin rather than by Kubernetes.
 
 ## Users, teams & audit
 

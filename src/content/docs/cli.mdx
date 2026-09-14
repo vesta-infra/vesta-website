@@ -1,7 +1,7 @@
 ---
 title: "CLI Reference"
 description: "Complete reference for the Vesta command-line tool."
-order: 4
+order: 5
 section: "Reference"
 ---
 
@@ -163,8 +163,49 @@ vesta secrets unbind stripe-keys --app my-app --env staging
 
 Omit `--env` to unbind the secret from every environment.
 
-### Pipelines
+### Add-ons
+
+Managed datastores — PostgreSQL, MySQL, Redis and MongoDB — that run in your cluster.
+
+```bash
+vesta addons list --project my-project
+vesta addons create --project my-project -f addon.yaml
+vesta addons credentials cache --project my-project --env production
+vesta addons delete cache --project my-project --force
+```
+
+`addon.yaml` describes one datastore:
+
+```yaml
+name: cache
+type: redis               # postgres | mysql | redis | mongodb
+version: "7"              # optional; a sensible major is pinned by default
+environment: production   # optional; omit for one instance per environment
+size: small               # optional pod size preset
+storage: 10Gi
+deletionPolicy: Retain    # Retain (default) keeps the volume when the add-on is deleted
+```
+
+Pass `-f -` to read from stdin.
+
+Bind an add-on's credentials into an app, so its connection string arrives as environment
+variables:
+
+```bash
+vesta addons bind cache --project my-project --app web
+vesta addons bind cache --project my-project --app web --env staging,production
+vesta addons unbind cache --project my-project --app web
+```
+
+Deleting an add-on requires `--force`, and retains its volume unless the add-on was created
+with `deletionPolicy: Delete`. Losing a database to a mistyped command is not a recoverable
+mistake.
+
+### Pipelines (deprecated)
 
 ```bash
 vesta pipelines list
 ```
+
+"Pipeline" was the earlier name for a project. The command is an alias for `vesta project` and
+will be removed; use the project commands instead.
