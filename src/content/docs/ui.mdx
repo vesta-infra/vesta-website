@@ -1,0 +1,176 @@
+---
+title: "Web UI"
+description: "A tour of the Vesta dashboard — projects, apps, add-ons, secrets and platform settings."
+order: 3
+section: "Reference"
+---
+
+# Web UI
+
+The dashboard is the primary way most people use Vesta. Everything here is also available through the [CLI](/docs/cli) and the [API](/docs/api) — the UI does not have privileged access of its own, and what you can see and do is decided by your role.
+
+By default the UI is deployed but has no ingress. To reach it from outside the cluster:
+
+```bash
+helm upgrade vesta oci://ghcr.io/vesta-infra/charts/vesta \
+  -n vesta-system \
+  --reuse-values \
+  --set ui.ingress.enabled=true \
+  --set ui.ingress.host=dashboard.example.com
+```
+
+The first person to open it completes setup and becomes the instance administrator.
+
+## Projects and environments
+
+A **project** groups related applications. An **environment** is a deployment target within it — `staging`, `production` — and each one gets its own Kubernetes namespace, named `{project}-{environment}`.
+
+The project page holds everything scoped to a project rather than to a single app:
+
+- **Environments** — create, clone, and set which branch auto-deploys
+- **Add-ons** — managed datastores shared across the project's apps
+- **Cost** — what the project's workloads are reserving, and what that costs
+- **Quotas** — per-environment ceilings on CPU, memory and storage
+
+## Apps
+
+An app is one deployable service. The app page is organised into tabs:
+
+| Tab | What it shows |
+|---|---|
+| Overview | Status, image, domains, environments, resource size, security profile |
+| Secrets | Environment variables and secret bindings |
+| Logs | Live and historical pod logs |
+| Terminal | A shell inside a running pod |
+| Metrics | CPU and memory, live pod state, and cost |
+| Builds | Build history and logs |
+| Cronjobs | Scheduled jobs that run alongside the app |
+| Schedule | Deployments queued for a future time |
+| Files | Browse a running container's filesystem |
+
+### Choosing a repository
+
+When an app builds from source, the repository is picked from the git connections your instance has configured rather than typed by hand. If the repository you want is not listed, the **connect more repositories** button takes you to the provider to authorise it, and the list refreshes when you come back.
+
+GitHub, GitLab and Bitbucket are supported, including self-managed GitLab and Bitbucket Data Center. See [git connections](#git-connections) below for adding one.
+
+### Choosing an image
+
+When an app deploys a pre-built image, the repository and tag are chosen from the registry the credential points at. A tag you cannot select is a tag that does not exist — which used to surface only as an `ImagePullBackOff` after the deploy.
+
+### Sleep and scale to zero
+
+An app can scale to zero when idle and wake again on its first request. On the overview tab, **Sleep Mode** shows whether the app is asleep, and why it is or is not — an app that will not sleep tells you whether it is busy, whether Prometheus is missing, or whether auto-sleep is simply off.
+
+Health checks do not wake a sleeping app. `/healthz`, `/health`, `/readyz`, `/livez`, `/healthcheck`, `/-/healthy` and `/-/ready` are answered by Vesta while the app is down, so an uptime monitor does not hold it awake forever. `/status` and `/ping` are deliberately not on that list, because both are real application endpoints often enough that answering them for you would be worse than the problem being solved. Add them per app if your monitor uses one — note that setting the list replaces the defaults rather than adding to them.
+
+If your monitor polls `/` itself, it will wake the app every time. Point it at `/healthz` instead.
+
+### Security profile
+
+Where the platform has enabled pod hardening, the overview tab shows which profile this app runs under and lets you override it. The override exists because `restricted` is not something an instance can safely turn on for everything: one image that writes to its own filesystem would otherwise force the whole instance back to the weakest profile.
+
+## Add-ons
+
+Managed datastores — PostgreSQL, MySQL, Redis and MongoDB — that run inside your cluster as StatefulSets and are reconciled by Vesta.
+
+Creating one generates a password and publishes a connection string into a Secret your apps can bind. The password is generated once and never rotated on its own: changing it on a reconcile would leave every already-running pod holding the old one, which surfaces as intermittent authentication failures rather than as anything naming a cause.
+
+Deleting an add-on **retains its volume by default**. Losing a database to a UI click is not a recoverable mistake, so removing the data is a separate, deliberate choice.
+
+## Secrets
+
+Two kinds, managed separately.
+
+**Application secrets** are environment variables and mounted files, scoped to a project, an app, or a single environment. Values are write-only — only an administrator can reveal one, and every reveal is recorded in the audit log.
+
+**Registry credentials** authenticate image pulls. Each one has a scope:
+
+- **Global** — usable by anyone who can reach the secrets page. Only an administrator can create one, because a credential everyone can use is an instance-wide decision.
+- **Project** — visible and usable only to that project's members.
+
+A credential that does not name a scope is global. Every credential created before scoping existed is in that state, and it stays that way: narrowing one that an app already pulls with would break that app's next deploy.
+
+The **test** button checks the credential against its registry and distinguishes bad credentials from an unreachable host. It also reports the case where a credential is stored in a form the cluster will not match — a Harbor credential entered as `https://harbor.example.com:443` does not match images at `harbor.example.com`, and the only symptom is an `ImagePullBackOff` that names the image rather than the credential. The fix is one click.
+
+Passwords are stored in Kubernetes Secrets, not in the credential object.
+
+## Cost
+
+Cost is reserved resources priced against a rate card. It is an estimate, and the page says so: there is no billing API to ask, and Kubernetes has no notion of a price.
+
+Two figures are shown and kept deliberately apart — what was **measured** over the window you picked, and what a **month** would cost if nothing changed. They answer different questions, and presenting an extrapolation as a measurement is how a cost page loses trust.
+
+The basis is what workloads *reserve*, not what they use: a 500m request occupies 500m of a node whether or not it is consumed, and that is what you are paying for. Usage is reported beside it as an efficiency figure, because the gap is the actionable number — an app on a large size using five per cent of it is the finding worth surfacing, and it is invisible if only the bill is shown.
+
+A sleeping app costs nothing for the time it was asleep. Storage still costs, because a volume that exists is a volume being paid for.
+
+Until an administrator sets your cluster's real prices under **Settings → Security**, the figures use a documented default derived from one commodity node and are labelled *estimated*.
+
+## Quotas
+
+A ceiling per environment on CPU, memory, storage and pod count.
+
+The important thing about a quota is *when* it takes effect. Kubernetes never applies one retroactively — pods that already exist keep running, and the quota refuses the **next** admission. A quota set too low is completely silent until somebody deploys, and then it fails in the middle of their rollout and looks like a platform fault.
+
+So Vesta works out what an environment has already committed on every pass, whether or not enforcement is on, and shows it next to the quota you are setting. **Committed** counts each app's autoscaling maximum, not its current replica count: a quota that fits today's replicas but not tomorrow's does not fail when you set it, it fails when the autoscaler tries to scale.
+
+If a quota is below what is already committed, the page says so and it is not enforced. Setting one there is allowed — lowering a quota deliberately and then scaling down to fit is reasonable — but it is never a surprise.
+
+Leave **enforce** off to record and report the numbers without refusing anything. That is the way to find out what an environment actually needs before constraining it.
+
+## Settings
+
+Administrator-only, except where noted.
+
+### General, Teams, Users, Roles
+
+Accounts, team membership, and per-project roles. Roles form a ladder — **viewer**, **deployer**, **maintainer**, **owner** — and can be assigned per project and per environment, with the narrowest scope winning.
+
+Secrets sit *above* deploy on that ladder. Being able to ship a release is a much smaller thing than being able to read the credentials the release runs with.
+
+### Git connections
+
+Add GitHub, GitLab or Bitbucket connections. More than one of each is supported, including several GitHub Apps.
+
+Each connection gets its own webhook URL. Connections added before this release keep working through the original URL.
+
+### SSL Certificates
+
+Certificate issuers apps can request TLS certificates from, created as cert-manager `ClusterIssuer`s. The default is used by any app that does not pick its own.
+
+### Security
+
+Three platform-wide settings, all off or inert by default.
+
+**Pod hardening** is a ladder:
+
+| Profile | What it does |
+|---|---|
+| `legacy` | Nothing. What every app already runs with. |
+| `baseline` | No privilege escalation, no capabilities, default seccomp filter. Safe to turn on across an instance. |
+| `restricted` | Baseline, plus a non-root user and a read-only root filesystem. Best set per app. |
+
+The default is `legacy` and it sets nothing at all. Anything else would change the behaviour of workloads already running, on upgrade, across the whole instance.
+
+`baseline` is the one meant to be turned on broadly — it is the set of restrictions almost no image notices. `restricted` adds the two that break real images, so an app that writes anywhere other than `/tmp`, `/var/run` or a mounted volume will fail to start. Individual apps can opt back out.
+
+**Network isolation** stops environments reaching each other. It denies inbound traffic to each environment except from within that environment and from the ingress controller. Outbound traffic is untouched — a default-deny on egress breaks DNS, and every symptom afterwards points somewhere else entirely.
+
+One thing to understand before relying on it: **NetworkPolicy is enforced by your cluster's network plugin, not by Kubernetes.** A cluster running a plugin that does not implement it accepts every policy, lists them back, and filters nothing. Vesta inspects your cluster and reports what it found, keeping *not enforced* distinct from *could not tell*. Read that line before assuming your environments are separated.
+
+**Default secret scope** is what new registry credentials get when they do not name one. It applies to new secrets only and never reclassifies an existing one.
+
+Cost rates are also set here. Give your node's monthly price rather than per-unit rates where you can — "what does this machine cost" is a question you can answer, and "what is a vCPU-hour worth" is not.
+
+### Integrations, Audit Log, Webhooks
+
+Notification targets, a record of every privileged action, and inbound webhook delivery history including any that were rejected.
+
+### System
+
+Version, update checks, and self-update.
+
+## What your role lets you see
+
+The UI hides what you cannot act on rather than showing it disabled, so two people on the same page may see different things. If something described here is missing, the usual reason is your role — a project **viewer** can read but not deploy, and only an administrator sees most of Settings.
