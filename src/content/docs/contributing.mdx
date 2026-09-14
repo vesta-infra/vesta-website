@@ -1,7 +1,7 @@
 ---
 title: "Contributing"
 description: "How to contribute to Vesta — setup, workflow, and guidelines."
-order: 6
+order: 7
 section: "Community"
 ---
 
@@ -67,6 +67,40 @@ vesta-kubernetes/
 2. Make your changes with clear, descriptive commits
 3. Ensure existing tests pass and add tests for new functionality
 4. Open a pull request against the `develop` branch
+
+### Before you push
+
+CI runs all of this, so running it first saves a round trip:
+
+```bash
+make test          # every Go module
+make lint          # go vet
+make helm-lint     # lint and render the chart
+```
+
+If you changed anything in `operator/api/`, regenerate and sync the CRDs:
+
+```bash
+make generate      # CRD schemas and deepcopy methods
+make sync-crds     # copy new properties into the chart's CRDs
+make check-crds    # fail if the chart would reject data an earlier release stored
+```
+
+CI fails if generated files are out of date. Kubernetes prunes fields a schema does not
+declare, **silently**, so a property that never made it into the chart's CRD is not an error
+you will see — it is a setting that does not stick.
+
+Two more checks guard the upgrade path, both comparing against published charts:
+
+```bash
+make helm-upgrade-safety   # fail if the chart drops a resource an earlier release rendered
+make check-upgrader-rbac   # fail if self-update cannot apply everything the chart renders
+```
+
+The first exists because Helm deletes resources that disappear between chart versions. That is
+usually what you want for a Deployment and catastrophic for a Namespace.
+
+For the UI, `npx tsc --noEmit` is the meaningful check.
 
 ## Code Style
 
