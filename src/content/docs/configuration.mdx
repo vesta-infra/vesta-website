@@ -27,6 +27,89 @@ Vesta is configured through Helm values. Below is the full reference for all con
 | `ui.ingress.enabled` | Enable UI ingress | `false` |
 | `ui.ingress.host` | UI ingress hostname | `ui.getvesta.sh` |
 
+## Platform configuration
+
+Beyond Helm values, platform-wide behaviour lives on the `VestaConfig` resource, which the
+operator reads on every reconcile. Most of it is settable from **Settings** in the dashboard;
+everything below can also be edited directly.
+
+```bash
+kubectl edit vestaconfig vesta
+```
+
+### Security
+
+```yaml
+spec:
+  security:
+    # legacy (default) | baseline | restricted
+    profile: baseline
+    # global (default) | project — the scope NEW registry credentials get
+    defaultSecretScope: project
+    networkIsolation:
+      enabled: true
+      # Replaces the default list rather than adding to it. Include wherever your
+      # ingress controller runs, and wherever Prometheus runs if you scrape apps.
+      trustedNamespaces: ["traefik", "kube-system", "monitoring"]
+```
+
+`profile` defaults to `legacy`, which sets no security context at all — the same as every app
+already runs with. Changing the default would alter the behaviour of running workloads on
+upgrade, so it does not change on its own. `baseline` is safe to enable across an instance;
+`restricted` adds a non-root user and a read-only root filesystem, which break images not
+built for them, and is best set per app.
+
+Network isolation is ingress-only. A default-deny on egress breaks DNS, and the isolation
+worth having is entirely an inbound property.
+
+**NetworkPolicy is enforced by your cluster's network plugin, not by Kubernetes.** A cluster
+running one that does not implement it accepts every policy and filters nothing. Check what
+Vesta concluded before relying on it:
+
+```bash
+kubectl get vestaenvironment <env> -n vesta-system \
+  -o jsonpath='{.status.networkIsolation}'
+```
+
+### Cost
+
+```yaml
+spec:
+  cost:
+    # Preferred: give what a node costs and let Vesta split it.
+    nodeMonthlyCost: 200
+    nodeVCPUs: 8
+    nodeMemoryGiB: 32
+    currency: USD
+```
+
+A node price wins over per-unit rates when both are given, because "what does this machine
+cost" is a question an administrator can answer and "what is a vCPU-hour worth" is not. Left
+unset, Vesta uses a documented default derived from one commodity node and labels the figures
+*estimated*.
+
+Per-unit rates are also accepted, as `cpuCoreHour`, `memoryGiBHour` and `storageGiBMonth`.
+
+### Quota defaults
+
+```yaml
+spec:
+  quotaDefaults:
+    requestsCpu: "8"
+    requestsMemory: 16Gi
+    storageTotal: 200Gi
+    # Off by default: the numbers are recorded and reported, nothing is refused.
+    enforce: false
+```
+
+These apply to any environment that does not set its own. A project or environment can tighten
+a single dimension without restating the rest.
+
+Leave `enforce` off first. A `ResourceQuota` is not applied retroactively — it refuses the
+*next* admission — so a quota set too low is silent until somebody deploys, and then it fails
+in the middle of their rollout. Vesta reports what an environment has already committed on
+every pass, enforced or not, so you can size one before committing to it.
+
 ## Upgrading
 
 To upgrade Vesta with new values:
